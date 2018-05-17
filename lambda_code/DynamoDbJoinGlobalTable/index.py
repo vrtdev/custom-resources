@@ -52,7 +52,7 @@ class DynamoDbJoinGlobalTable(CloudFormationCustomResource):
         return {}
 
     def update(self):
-        if self.old_resource_properties['TableName'] != self.table_name:
+        if self.has_property_changed('TableName'):
             # We need a new GlobalTable, switch to create and let CLEANUP delete the old one
             return self.create()
 
