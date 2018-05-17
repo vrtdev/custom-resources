@@ -1,6 +1,8 @@
 """CloudFormation template to create custom resource Lambda's"""
 import os
 import importlib
+import sys
+
 import argparse
 import shutil
 import typing
@@ -68,8 +70,8 @@ def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[str]
 
 
 def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
-    print(f"Creating ZIP for resource {resource_name}")
-    with zipfile.ZipFile(os.path.join(output_dir, f"{resource_name}.zip"),
+    print("Creating ZIP for resource {resource_name}".format(resource_name=resource_name))
+    with zipfile.ZipFile(os.path.join(output_dir, "{resource_name}.zip".format(resource_name=resource_name)),
                          mode='w',
                          compression=zipfile.ZIP_DEFLATED) as zip:
 
@@ -101,7 +103,10 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
 
             elif entry.is_file():
                 zip_path = entry.path
-                lambda_prefix = f"{lambda_dir}/{resource_name}/"
+                lambda_prefix = "{lambda_dir}/{resource_name}/".format(
+                    lambda_dir=lambda_dir,
+                    resource_name=resource_name,
+                )
                 if zip_path.startswith(lambda_prefix):
                     zip_path = zip_path[(len(lambda_prefix)):]
                 if requirements is not None and zip_path.startswith(pip_dir):
@@ -121,41 +126,55 @@ try:
 except FileExistsError:
     pass
 
+sys.path.insert(0, os.path.dirname(args.class_dir))
+importlib.import_module(os.path.basename(args.class_dir))
+
 for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class_dir):
     create_zip_file(args.lambda_dir, custom_resource_name, args.output_dir)
 
-    custom_resource_mod = importlib.import_module(f'.{custom_resource_name}', args.class_dir)
+    custom_resource_mod = importlib.import_module(
+        '.' + custom_resource_name, os.path.basename(args.class_dir))
     custom_resource_class = getattr(custom_resource_mod, custom_resource_name)
 
     role = template.add_resource(custom_resource_class.lambda_role(
-        f"{custom_resource_name}Role",
+        "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name),
     ))
     awslambdafunction = template.add_resource(awslambda.Function(
-        f"{custom_resource_name}Function",
+        "{custom_resource_name}Function".format(custom_resource_name=custom_resource_name),
         Code=awslambda.Code(
             S3Bucket=troposphere.Ref(s3_bucket),
-            S3Key=troposphere.Join('', [troposphere.Ref(s3_path), f"{custom_resource_name}.zip"]),
+            S3Key=troposphere.Join('', [troposphere.Ref(s3_path),
+                                        "{custom_resource_name}.zip".format(
+                                            custom_resource_name=custom_resource_name)]),
         ),
         Role=GetAtt(role, 'Arn'),
         Tags=troposphere.Tags(**vrt_tags),
         **custom_resource_class.function_settings()
     ))
     template.add_resource(logs.LogGroup(
-        f"{custom_resource_name}Logs",
-        LogGroupName=Sub(f"/aws/lambda/{custom_resource_name}"),
+        "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name),
+        LogGroupName=Sub("/aws/lambda/{custom_resource_name}".format(custom_resource_name=custom_resource_name)),
         RetentionInDays=90,
     ))
     template.add_output(Output(
-        f"{custom_resource_name}ServiceToken",
+        "{custom_resource_name}ServiceToken".format(custom_resource_name=custom_resource_name),
         Value=GetAtt(awslambdafunction, 'Arn'),
-        Description=f"ServiceToken for the {custom_resource_name} custom resource",
-        Export=Export(Sub(f"${{AWS::StackName}}-{custom_resource_name}ServiceToken"))
+        Description="ServiceToken for the {custom_resource_name} custom resource".format(
+            custom_resource_name=custom_resource_name
+        ),
+        Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}ServiceToken".format(
+            custom_resource_name=custom_resource_name
+        )))
     ))
     template.add_output(Output(
-        f"{custom_resource_name}Role",
+        "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name),
         Value=GetAtt(role, 'Arn'),
-        Description=f"Role used by the {custom_resource_name} custom resource",
-        Export=Export(Sub(f"${{AWS::StackName}}-{custom_resource_name}Role")),
+        Description="Role used by the {custom_resource_name} custom resource".format(
+            custom_resource_name=custom_resource_name
+        ),
+        Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}Role".format(
+            custom_resource_name=custom_resource_name,
+        ))),
     ))
 
 with open(os.path.join(args.output_dir, 'cfn.json'), 'w') as f:
