@@ -61,12 +61,17 @@ class DynamoDbJoinGlobalTable(CloudFormationCustomResource):
         return {}
 
     def delete(self):
-        self.get_boto3_client('dynamodb').update_global_table(
-            GlobalTableName=self.table_name,
-            ReplicaUpdates=[
-                {'Delete': {'RegionName': REGION}}
-            ],
-        )
+        boto_client = self.get_boto3_client('dynamodb')
+        try:
+            boto_client.update_global_table(
+                GlobalTableName=self.table_name,
+                ReplicaUpdates=[
+                    {'Delete': {'RegionName': REGION}}
+                ],
+            )
+        except boto_client.exceptions.GlobalTableNotFoundException:
+            # Assume delete was successful
+            pass
 
 
 handler = DynamoDbJoinGlobalTable.get_handler()
