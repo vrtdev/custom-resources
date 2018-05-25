@@ -40,12 +40,15 @@ class DynamoDbJoinGlobalTable(CloudFormationCustomResource):
             )
 
         except boto_client.exceptions.GlobalTableAlreadyExistsException:
-            global_table = boto_client.update_global_table(
-                GlobalTableName=self.table_name,
-                ReplicaUpdates=[
-                    {'Create': {'RegionName': REGION}}
-                ],
-            )
+            try:
+                global_table = boto_client.update_global_table(
+                    GlobalTableName=self.table_name,
+                    ReplicaUpdates=[
+                        {'Create': {'RegionName': REGION}}
+                    ],
+                )
+            except boto_client.exceptions.ReplicaAlreadyExistsException:
+                pass
 
         self.physical_resource_id = global_table['GlobalTableDescription']['GlobalTableArn']
 
