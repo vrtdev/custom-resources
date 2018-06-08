@@ -79,10 +79,12 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
 
         # See if there is a top-level `requirements.txt`
         requirements = None
+        test = None
         for entry in entries:
             if entry.name == 'requirements.txt':
                 requirements = entry
-                break  # filenames are unique, no need to continue once found
+            elif entry.name == 'test':
+                test = entry
 
         if requirements is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
@@ -90,6 +92,9 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
             pip_dir = os.path.join(output_dir, resource_name)
             pip.main(['install', '-r', requirements.path, '-t', pip_dir])
             entries.update(set(os.scandir(pip_dir)))
+
+        if test is not None:
+            entries.remove(test)
 
         # add everything (recursively) to the zip file
         while len(entries):
