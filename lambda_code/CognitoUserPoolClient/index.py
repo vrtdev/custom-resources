@@ -13,6 +13,13 @@ from cfn_custom_resource import CloudFormationCustomResource
 REGION = os.environ['AWS_REGION']
 
 
+def convertToBool(input):
+    if isinstance(input, str):
+        return input.lower() == 'true'
+    else:
+        return input
+
+
 class CognitoUserPoolClient(CloudFormationCustomResource):
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Client Pool Id instead
 
@@ -22,34 +29,19 @@ class CognitoUserPoolClient(CloudFormationCustomResource):
             self.client_name = self.resource_properties['ClientName']
             self.user_pool_id = self.resource_properties['UserPoolId']
             """Optional"""
-            generate_secret = self.resource_properties.get('GenerateSecret', None)
-            refresh_token_validity = self.resource_properties.get('RefreshTokenValidity', None)
-            supported_identity_providers = self.resource_properties.get('SupportedIdentityProviders', None)
-            logout_urls = self.resource_properties.get('LogoutURLs', None)
-            callback_urls = self.resource_properties.get('CallbackURLs', None)
-            default_redirect_uri = self.resource_properties.get('DefaultRedirectURI', None)
-            read_attributes = self.resource_properties.get('ReadAttributes', None)
-            write_attributes = self.resource_properties.get('WriteAttributes', None)
-            allowed_oauth_flows = self.resource_properties.get('AllowedOAuthFlows', None)
-            allowed_oauth_scopes = self.resource_properties.get('AllowedOAuthScopes', None)
-            allowed_oauth_flows_user_pool_client = self.resource_properties.get('AllowedOAuthFlowsUserPoolClient', None)
-            explicit_auth_flows = self.resource_properties.get('ExplicitAuthFlows', None)
-
-            self.params = {'UserPoolId': self.user_pool_id, 'ClientName': self.client_name,
-                           'GenerateSecret': generate_secret,
-                           'RefreshTokenValidity': refresh_token_validity, 'ReadAttributes': read_attributes,
-                           'WriteAttributes': write_attributes, 'ExplicitAuthFlows': explicit_auth_flows,
-                           'SupportedIdentityProviders': supported_identity_providers, 'CallbackURLs': callback_urls,
-                           'LogoutURLs': logout_urls, 'DefaultRedirectURI': default_redirect_uri,
-                           'AllowedOAuthFlows': allowed_oauth_flows, 'AllowedOAuthScopes': allowed_oauth_scopes,
-                           'AllowedOAuthFlowsUserPoolClient': allowed_oauth_flows_user_pool_client}
-            # convert strings to bool where needed:
-            for k in ['AllowedOAuthFlowsUserPoolClient', 'GenerateSecret']:
-                # convert string to boolean
-                if isinstance(self.params[k], str):
-                    self.params[k] = self.params[k].lower() == 'true'
-            # Remove all params that are None
-            self.params = {k: v for k, v in self.params.items() if v is not None}
+            self.generate_secret = convertToBool(self.resource_properties.get('GenerateSecret', None))
+            self.refresh_token_validity = self.resource_properties.get('RefreshTokenValidity', None)
+            self.supported_identity_providers = self.resource_properties.get('SupportedIdentityProviders', None)
+            self.logout_urls = self.resource_properties.get('LogoutURLs', None)
+            self.callback_urls = self.resource_properties.get('CallbackURLs', None)
+            self.default_redirect_uri = self.resource_properties.get('DefaultRedirectURI', None)
+            self.read_attributes = self.resource_properties.get('ReadAttributes', None)
+            self.write_attributes = self.resource_properties.get('WriteAttributes', None)
+            self.allowed_oauth_flows = self.resource_properties.get('AllowedOAuthFlows', None)
+            self.allowed_oauth_scopes = self.resource_properties.get('AllowedOAuthScopes', None)
+            self.allowed_oauth_flows_user_pool_client = convertToBool(
+                self.resource_properties.get('AllowedOAuthFlowsUserPoolClient', None))
+            self.explicit_auth_flows = self.resource_properties.get('ExplicitAuthFlows', None)
 
             return True
 
@@ -57,9 +49,21 @@ class CognitoUserPoolClient(CloudFormationCustomResource):
             return False
 
     def create(self):
+        params = {'UserPoolId': self.user_pool_id, 'ClientName': self.client_name,
+                       'GenerateSecret': self.generate_secret,
+                       'RefreshTokenValidity': self.refresh_token_validity, 'ReadAttributes': self.read_attributes,
+                       'WriteAttributes': self.write_attributes, 'ExplicitAuthFlows': self.explicit_auth_flows,
+                       'SupportedIdentityProviders': self.supported_identity_providers,
+                       'CallbackURLs': self.callback_urls,
+                       'LogoutURLs': self.logout_urls, 'DefaultRedirectURI': self.default_redirect_uri,
+                       'AllowedOAuthFlows': self.allowed_oauth_flows, 'AllowedOAuthScopes': self.allowed_oauth_scopes,
+                       'AllowedOAuthFlowsUserPoolClient': self.allowed_oauth_flows_user_pool_client}
+        # Remove all params that are None
+        params = {k: v for k, v in params.items() if v is not None}
+
         boto_client = self.get_boto3_client('cognito-idp')
 
-        response = boto_client.create_user_pool_client(**self.params)
+        response = boto_client.create_user_pool_client(**params)
 
         self.physical_resource_id = response["UserPoolClient"]["ClientId"]
 
@@ -68,10 +72,25 @@ class CognitoUserPoolClient(CloudFormationCustomResource):
         }
 
     def update(self):
+        if self.has_property_changed('GenerateSecret'):
+            # We need a new GlobalTable, switch to create and let CLEANUP delete the old one
+            raise ValueError("Change of GenerateSecret is not supported for update, please delete and recreate your client")
+
+        params = {'UserPoolId': self.user_pool_id, 'ClientName': self.client_name,
+                       'RefreshTokenValidity': self.refresh_token_validity, 'ReadAttributes': self.read_attributes,
+                       'WriteAttributes': self.write_attributes, 'ExplicitAuthFlows': self.explicit_auth_flows,
+                       'SupportedIdentityProviders': self.supported_identity_providers,
+                       'CallbackURLs': self.callback_urls,
+                       'LogoutURLs': self.logout_urls, 'DefaultRedirectURI': self.default_redirect_uri,
+                       'AllowedOAuthFlows': self.allowed_oauth_flows, 'AllowedOAuthScopes': self.allowed_oauth_scopes,
+                       'AllowedOAuthFlowsUserPoolClient': self.allowed_oauth_flows_user_pool_client}
+        # Remove all params that are None
+        params = {k: v for k, v in params.items() if v is not None}
+
         boto_client = self.get_boto3_client('cognito-idp')
 
         response = boto_client.update_user_pool_client(ClientId=self.physical_resource_id,
-                                                       **self.params
+                                                       **params
                                                        )
         return {
             'ClientSecret': response["UserPoolClient"].get('ClientSecret', ''),
