@@ -33,7 +33,7 @@ class CognitoUserPoolClient(LambdaBackedCustomResource):
 
 
     @classmethod
-    def get_lambda_policy(cls):
+    def _lambda_policy(cls):
         """
         Return the policy that the lambda function needs to function.
 
