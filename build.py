@@ -158,7 +158,7 @@ for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class
     ))
     template.add_resource(logs.LogGroup(
         "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name),
-        LogGroupName=Sub("/aws/lambda/{custom_resource_name}".format(custom_resource_name=custom_resource_name)),
+        LogGroupName=Sub("/aws/lambda/{custom_resource_name}-${{AWS::StackName}}".format(custom_resource_name=custom_resource_name)),
         RetentionInDays=90,
     ))
     template.add_output(Output(
