@@ -14,6 +14,7 @@ class Ec2FindAmi(LambdaBackedCustomResource):
         'DeviceType': (string_types, False),  # Defaults to: "ebs",
         'VirtualizationType': (string_types, False),  # Defaults to: "hvm",
         'State': (string_types, False),  # Defaults to: 'available',
+        'Dummy': (string_types, False),  # Dummy parameter to trigger updates
     }
 
     @classmethod
