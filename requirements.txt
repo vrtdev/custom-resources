@@ -1,3 +1,5 @@
 troposphere
 https://192.0.2.1/pip-packages/central_helpers/central_helpers-4.2.1.tar.gz
 six
+pytest
+-r lambda_code/CognitoUserPoolDomain/requirements.txt
