@@ -12,6 +12,11 @@ class LambdaBackedCustomResource(CustomResource):
      * or use split_stacks=True, and import the ServiceToken from another stack (which uses the first option)
     """
 
+    def __init__(self, *args, **kwargs):
+        super(LambdaBackedCustomResource, self).__init__(*args, **kwargs)
+        if 'ServiceToken' not in self.properties:
+            raise ValueError("Error: CustomResource without ServiceToken")
+
     @classmethod
     def _lambda_policy(cls):
         """
