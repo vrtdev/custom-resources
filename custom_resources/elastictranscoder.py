@@ -5,12 +5,11 @@ from six import string_types
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
-class ElasticTranscoderPipeline(LambdaBackedCustomResource):
+class Pipeline(LambdaBackedCustomResource):
     """
     Added support for configuring the Cognito Client User Pool.
     """
 
-    resource_type = 'Custom::ElasticTranscoderPipeline'
     props = {
         'Name': (string_types, True),
         'InputBucket': (string_types, True),

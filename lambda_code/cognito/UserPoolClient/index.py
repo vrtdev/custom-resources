@@ -20,7 +20,8 @@ def convertToBool(input):
         return input
 
 
-class CognitoUserPoolClient(CloudFormationCustomResource):
+class UserPoolClient(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Client Pool Id instead
 
     def validate(self):
@@ -106,4 +107,4 @@ class CognitoUserPoolClient(CloudFormationCustomResource):
             pass
 
 
-handler = CognitoUserPoolClient.get_handler()
+handler = UserPoolClient.get_handler()

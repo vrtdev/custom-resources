@@ -27,7 +27,8 @@ def dict_element_copy_if_exists(
         target_dict[target_key] = source_dict[source_key]
 
 
-class Ec2FindAmi(CloudFormationCustomResource):
+class FindAmi(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Return AMI ID as physical ID
 
     def validate(self):
@@ -90,4 +91,4 @@ class Ec2FindAmi(CloudFormationCustomResource):
         pass
 
 
-handler = Ec2FindAmi.get_handler()
+handler = FindAmi.get_handler()

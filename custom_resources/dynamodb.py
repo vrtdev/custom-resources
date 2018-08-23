@@ -3,8 +3,7 @@ from six import string_types
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
-class DynamoDbJoinGlobalTable(LambdaBackedCustomResource):
-    resource_type = 'Custom::DynamoDbJoinGlobalTable'
+class JoinGlobalTable(LambdaBackedCustomResource):
     props = {
         'TableName': (string_types, True),
     }

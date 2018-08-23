@@ -3,8 +3,7 @@ from six import string_types
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
-class LambdaVersion(LambdaBackedCustomResource):
-    resource_type = 'Custom::LambdaVersion'
+class Version(LambdaBackedCustomResource):
     props = {
         'FunctionName': (string_types, True),
         'Description': (string_types, False),

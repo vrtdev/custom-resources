@@ -3,8 +3,7 @@ from six import string_types
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
-class Ec2FindAmi(LambdaBackedCustomResource):
-    resource_type = 'Custom::Ec2FindAmi'
+class FindAmi(LambdaBackedCustomResource):
     props = {
         'Region': (string_types, False),  # Default: current region
         'Name': (string_types, True),  # Like: "amzn-ami-minimal-hvm*"

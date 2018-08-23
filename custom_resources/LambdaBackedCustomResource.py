@@ -1,21 +1,47 @@
 from six import string_types
-from troposphere import iam, Sub, GetAtt
+from troposphere import iam, Sub, ImportValue
 from troposphere.cloudformation import CustomResource
+
+from . import _get_custom_resources_stack_name
 
 
 class LambdaBackedCustomResource(CustomResource):
     """
     An generic class to define custom resources.
 
-    If you use this resource you also have to:
-     * either add `template.add_resource(LambdaBackedResource.dependencies())` to your code
-     * or use split_stacks=True, and import the ServiceToken from another stack (which uses the first option)
+    The ServiceToken of the custom resources is retrieved via an ImportValue() call.
+    By default, the value is imported as '{stack_name}-{cust_res_name}ServiceToken'.
+    You can change the stack_name by overriding custom_resources.CUSTOM_RESOURCES_STACK_NAME before you start.
     """
 
     def __init__(self, *args, **kwargs):
+        name = self.__class__.__module__.split('.')
+        name.append(self.__class__.__name__)
+        name.pop(0)  # remove `custom_resources` package name
+        self.resource_type = "Custom::" + '@'.join(name)
+        # '.' is not allowed in a Custom::-name, but `@` is
+
+        if 'ServiceToken' not in self.props:
+            self.props['ServiceToken'] = (object, True)  # Anything goes
+
+        if 'ServiceToken' not in kwargs:
+            kwargs['ServiceToken'] = self.service_token()
+
         super(LambdaBackedCustomResource, self).__init__(*args, **kwargs)
-        if 'ServiceToken' not in self.properties:
-            raise ValueError("Error: CustomResource without ServiceToken")
+
+        self.check_deprecation()
+
+    def service_token(self):
+        return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}ServiceToken".format(
+            custom_resources_stack_name=_get_custom_resources_stack_name(),
+            custom_resource_name=self.custom_resource_name(self.name())
+        )))
+
+    def role(self):
+        return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}Role".format(
+            custom_resources_stack_name=_get_custom_resources_stack_name(),
+            custom_resource_name=self.custom_resource_name(self.name())
+        )))
 
     @classmethod
     def _lambda_policy(cls):

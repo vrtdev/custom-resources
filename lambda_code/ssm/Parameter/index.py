@@ -23,7 +23,7 @@ def generate_random(specs: dict) -> str:
     return r
 
 
-class SsmParameter(CloudFormationCustomResource):
+class Parameter(CloudFormationCustomResource):
     """
     Properties:
         Name: str: required: Name of the Parameter (including namespace)
@@ -55,7 +55,7 @@ class SsmParameter(CloudFormationCustomResource):
 
             Same Update restrictions apply.
     """
-
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Name instead
 
     def validate(self):
@@ -186,4 +186,4 @@ class SsmParameter(CloudFormationCustomResource):
             pass
 
 
-handler = SsmParameter.get_handler()
+handler = Parameter.get_handler()

@@ -5,7 +5,8 @@ from cfn_custom_resource import CloudFormationCustomResource
 REGION = os.environ['AWS_REGION']
 
 
-class LambdaVersion(CloudFormationCustomResource):
+class Version(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use version ARN instead
 
     def validate(self):
@@ -37,4 +38,4 @@ class LambdaVersion(CloudFormationCustomResource):
         )
 
 
-handler = LambdaVersion.get_handler()
+handler = Version.get_handler()

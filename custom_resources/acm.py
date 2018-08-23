@@ -4,8 +4,7 @@ from troposphere import Tags
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
-class AcmDnsValidatedCertificate(LambdaBackedCustomResource):
-    resource_type = 'Custom::AcmDnsValidatedCertificate'
+class DnsValidatedCertificate(LambdaBackedCustomResource):
     props = {
         'DomainName': (string_types, True),
         'SubjectAlternativeNames': ([string_types], False),

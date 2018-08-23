@@ -4,8 +4,7 @@ from troposphere import Tags
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
-class SsmParameter(LambdaBackedCustomResource):
-    resource_type = 'Custom::SsmParameter'
+class Parameter(LambdaBackedCustomResource):
     props = {
         'Name': (string_types, True),
         'Type': (string_types, False),
