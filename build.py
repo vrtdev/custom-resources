@@ -46,27 +46,51 @@ template_helper.add_parameter_label(s3_path, "S3 path")
 template_helper.add_parameter_group("Lambda code location", [s3_bucket, s3_path])
 
 
+def rec_split_path(path: str) -> typing.List[str]:
+    l = []
+    head = path
+    while len(head) > 0:
+        head, tail = os.path.split(head)
+        l.insert(0, tail)
+    return l
+
+
+def rec_join_path(path_list: typing.List[str]) -> str:
+    if len(path_list) == 0:
+        return ''
+    if len(path_list) == 1:
+        return path_list[0]
+    path = path_list.pop(0)
+    while len(path_list):
+        path = os.path.join(path, path_list.pop(0))
+    return path
+
+
 def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[str]:
     """
     Find custom resources matching our requirements
     """
-    custom_resources = {
-        'py': set(),
-        'dir': set(),
-    }
-    for entry in os.scandir(lambda_dir):
-        if entry.name.startswith('.'):
-            continue
-        if entry.is_dir():
-            custom_resources['dir'].add(entry.name)
+    custom_resources_candidates = set()
+    for dirpath, dirs, files in os.walk(class_dir):
+        for file in files:
+            if file.startswith('.'):
+                continue
+            if file.startswith('_'):
+                continue
+            if not file.endswith('.py'):
+                continue
+            file_without_py = file[:-3]
+            basename = os.path.join(dirpath[len(class_dir)+1:], file_without_py)
+            custom_resources_candidates.add(basename)
 
-    for entry in os.scandir(class_dir):
-        if entry.name.startswith('.'):
-            continue
-        if entry.is_file():
-            custom_resources['py'].add(entry.name[:-3])
+    custom_resources = set()
+    for entry in custom_resources_candidates:
+        path = os.path.join(lambda_dir, entry)
+        if os.path.isdir(path):
+            mod_path = '.'.join(rec_split_path(entry))
+            custom_resources.add(mod_path)
 
-    return custom_resources['py'] & custom_resources['dir']
+    return custom_resources
 
 
 def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
@@ -75,7 +99,9 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
                          mode='w',
                          compression=zipfile.ZIP_DEFLATED) as zip:
 
-        entries = set(os.scandir(os.path.join(lambda_dir, resource_name)))
+        resource_path = resource_name.split('.')
+        resource_path = rec_join_path(resource_path)
+        entries = set(os.scandir(os.path.join(lambda_dir, resource_path)))
 
         # See if there is a top-level `requirements.txt`
         requirements = None
@@ -139,13 +165,15 @@ for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class
 
     custom_resource_mod = importlib.import_module(
         '.' + custom_resource_name, os.path.basename(args.class_dir))
-    custom_resource_class = getattr(custom_resource_mod, custom_resource_name)
+    custom_resource_name_last_component = custom_resource_name.split('.')[-1]
+    custom_resource_class = getattr(custom_resource_mod, custom_resource_name_last_component)
 
+    custom_resource_name_cfn = custom_resource_name.replace('.', '0')
     role = template.add_resource(custom_resource_class.lambda_role(
-        "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name),
+        "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
     ))
     awslambdafunction = template.add_resource(awslambda.Function(
-        "{custom_resource_name}Function".format(custom_resource_name=custom_resource_name),
+        "{custom_resource_name}Function".format(custom_resource_name=custom_resource_name_cfn),
         Code=awslambda.Code(
             S3Bucket=troposphere.Ref(s3_bucket),
             S3Key=troposphere.Join('', [troposphere.Ref(s3_path),
@@ -157,12 +185,14 @@ for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class
         **custom_resource_class.function_settings()
     ))
     template.add_resource(logs.LogGroup(
-        "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name),
-        LogGroupName=Sub("/aws/lambda/{custom_resource_name}-${{AWS::StackName}}".format(custom_resource_name=custom_resource_name)),
+        "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name_cfn),
+        LogGroupName=Sub("/aws/lambda/{custom_resource_name}-${{AWS::StackName}}".format(
+            custom_resource_name=custom_resource_name
+        )),
         RetentionInDays=90,
     ))
     template.add_output(Output(
-        "{custom_resource_name}ServiceToken".format(custom_resource_name=custom_resource_name),
+        "{custom_resource_name}ServiceToken".format(custom_resource_name=custom_resource_name_cfn),
         Value=GetAtt(awslambdafunction, 'Arn'),
         Description="ServiceToken for the {custom_resource_name} custom resource".format(
             custom_resource_name=custom_resource_name
@@ -172,7 +202,7 @@ for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class
         )))
     ))
     template.add_output(Output(
-        "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name),
+        "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
         Value=GetAtt(role, 'Arn'),
         Description="Role used by the {custom_resource_name} custom resource".format(
             custom_resource_name=custom_resource_name
