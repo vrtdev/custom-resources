@@ -1,5 +1,4 @@
 """Custom resources related to ElasticTranscoder."""
-
 from six import string_types
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
@@ -50,3 +49,11 @@ class Pipeline(LambdaBackedCustomResource):
                 }
             ]
         }
+
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        # Keep legacy non-structured name for backward compatibility
+        return ['ElasticTranscoderPipeline']

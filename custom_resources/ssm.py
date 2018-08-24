@@ -40,3 +40,11 @@ class Parameter(LambdaBackedCustomResource):
                 "Resource": "*",
             }],
         }
+
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        # Keep legacy non-structured name for backward compatibility
+        return ['SsmParameter']

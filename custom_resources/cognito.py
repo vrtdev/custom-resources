@@ -1,5 +1,4 @@
 """Custom resources related to Cognito."""
-
 # wraps around http://boto3.readthedocs.io/en/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.create_user_pool_client
 
 from six import string_types
@@ -57,6 +56,15 @@ class UserPoolClient(LambdaBackedCustomResource):
               ]
             }
 
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        # Keep legacy non-structured name for backward compatibility
+        return ['CognitoUserPoolClient']
+
+
 
 class UserPoolDomain(LambdaBackedCustomResource):
     """
@@ -92,3 +100,11 @@ class UserPoolDomain(LambdaBackedCustomResource):
                 }
             ]
         }
+
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        # Keep legacy non-structured name for backward compatibility
+        return ['CognitoUserPoolDomain']

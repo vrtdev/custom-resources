@@ -12,6 +12,7 @@ import pip
 import troposphere
 from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants
 from central_helpers import MetadataHelper, vrt
+from custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
 
 parser = argparse.ArgumentParser(description='Build custom resources CloudForamtion template')
 parser.add_argument('--class-dir', help='Where to look for the CustomResource classes',
@@ -67,7 +68,7 @@ def rec_join_path(path_list: typing.List[str]) -> str:
 
 
 class CustomResource:
-    def __init__(self, name: typing.List[str], lambda_path: str, troposphere_class: type):
+    def __init__(self, name: typing.List[str], lambda_path: str, troposphere_class: LambdaBackedCustomResource):
         self.name = name
         self.lambda_path = lambda_path
         self.troposphere_class = troposphere_class
@@ -126,6 +127,7 @@ def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[Cust
 
 def create_zip_file(custom_resource: CustomResource, output_dir: str):
     dot_joined_resource_name = '.'.join(custom_resource.name)
+
     print("Creating ZIP for resource {}".format(dot_joined_resource_name))
 
     zip_filename = "{}.zip".format(dot_joined_resource_name)
@@ -193,11 +195,11 @@ sys.path.insert(0, os.path.dirname(args.class_dir))
 importlib.import_module(os.path.basename(args.class_dir))
 
 for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir):
-    zip_filename = create_zip_file(custom_resource, args.output_dir)
+    custom_resource_name_cfn = custom_resource.troposphere_class.cloudformation_name(
+        custom_resource.troposphere_class.name()
+    )
 
-    custom_resource_name_cfn = '0'.join(custom_resource.name)
-    # '.' is not allowed...
-    # must match logic in custom_resources/__init__.py
+    zip_filename = create_zip_file(custom_resource, args.output_dir)
 
     role = template.add_resource(custom_resource.troposphere_class.lambda_role(
         "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
