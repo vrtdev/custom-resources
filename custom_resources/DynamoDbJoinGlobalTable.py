@@ -1,24 +1,7 @@
-from six import string_types
-
-from .LambdaBackedCustomResource import LambdaBackedCustomResource
+from .dynamodb import JoinGlobalTable
 
 
-class DynamoDbJoinGlobalTable(LambdaBackedCustomResource):
-    resource_type = 'Custom::DynamoDbJoinGlobalTable'
-    props = {
-        'TableName': (string_types, True),
-    }
-
-    @classmethod
-    def _lambda_policy(cls):
-        return {
-            "Version": "2012-10-17",
-            "Statement": [{
-                "Effect": "Allow",
-                "Action": [
-                    "dynamodb:CreateGlobalTable",
-                    "dynamodb:UpdateGlobalTable",
-                ],
-                "Resource": "*",
-            }],
-        }
+# Backward compatibility
+class DynamoDbJoinGlobalTable(JoinGlobalTable):
+    _deprecated = 1535105258
+    _deprecated_message = 'Use custom_resources.dynamodb.JoinGlobalTable() instead'

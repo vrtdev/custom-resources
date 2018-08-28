@@ -1,21 +1,48 @@
+import time
+import warnings
+
 from six import string_types
-from troposphere import iam, Sub, GetAtt
+from troposphere import iam, Sub, ImportValue
 from troposphere.cloudformation import CustomResource
+
+from . import _get_custom_resources_stack_name
 
 
 class LambdaBackedCustomResource(CustomResource):
     """
     An generic class to define custom resources.
 
-    If you use this resource you also have to:
-     * either add `template.add_resource(LambdaBackedResource.dependencies())` to your code
-     * or use split_stacks=True, and import the ServiceToken from another stack (which uses the first option)
+    The ServiceToken of the custom resources is retrieved via an ImportValue() call.
+    By default, the value is imported as '{stack_name}-{cust_res_name}ServiceToken'.
+    You can change the stack_name by overriding custom_resources.CUSTOM_RESOURCES_STACK_NAME before you start.
     """
+    _deprecated = False  # Unix epoch time (integer) of deprecation
+    _deprecated_message = ''  # arbitrary string explaining the upgrade path
 
     def __init__(self, *args, **kwargs):
+        self.resource_type = "Custom::" + self.custom_resource_name(self.name())
+
+        if 'ServiceToken' not in self.props:
+            self.props['ServiceToken'] = (object, True)  # Anything goes
+
+        if 'ServiceToken' not in kwargs:
+            kwargs['ServiceToken'] = self.service_token()
+
         super(LambdaBackedCustomResource, self).__init__(*args, **kwargs)
-        if 'ServiceToken' not in self.properties:
-            raise ValueError("Error: CustomResource without ServiceToken")
+
+        self.check_deprecation()
+
+    def service_token(self):
+        return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}ServiceToken".format(
+            custom_resources_stack_name=_get_custom_resources_stack_name(),
+            custom_resource_name=self.custom_resource_name(self.name())
+        )))
+
+    def role(self):
+        return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}Role".format(
+            custom_resources_stack_name=_get_custom_resources_stack_name(),
+            custom_resource_name=self.custom_resource_name(self.name())
+        )))
 
     @classmethod
     def _lambda_policy(cls):
@@ -89,3 +116,46 @@ class LambdaBackedCustomResource(CustomResource):
         }
         settings = cls._update_lambda_settings(default_settings)
         return settings
+
+    @classmethod
+    def check_deprecation(cls):
+        if not cls._deprecated:
+            return
+        warnings.warn(
+            "{c} is deprecated since {t}\n{m}".format(
+                c=cls.__name__,
+                t=time.strftime('%Y-%m-%d', time.localtime(cls._deprecated)),
+                m=cls._deprecated_message,
+            ),
+            DeprecationWarning
+        )
+        # Sleep for 1 second for every day since this was deprecated
+        time.sleep((time.time() - cls._deprecated) / 86400)
+
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        name = cls.__module__.split('.')
+        name.pop(0)  # remove `custom_resources` package name
+        name.append(cls.__name__)
+        return name
+
+    @staticmethod
+    def cloudformation_name(name):
+        """
+        :type name: List[str]
+        :rtype: str
+        """
+        return '0'.join(name)
+        # '.' is not allowed...
+
+    @staticmethod
+    def custom_resource_name(name):
+        """
+        :type name: List[str
+        :rtype: str
+        """
+        return '@'.join(name)
+        # '.' is not allowed in a Custom::-name, but `@` is

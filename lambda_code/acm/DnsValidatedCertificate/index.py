@@ -26,7 +26,8 @@ def get_validation_records(describe_stack_response):
     return json.dumps(result)
 
 
-class AcmDnsValidatedCertificate(CloudFormationCustomResource):
+class DnsValidatedCertificate(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use version ARN instead
 
     def validate(self):
@@ -108,4 +109,4 @@ class AcmDnsValidatedCertificate(CloudFormationCustomResource):
             pass
 
 
-handler = AcmDnsValidatedCertificate.get_handler()
+handler = DnsValidatedCertificate.get_handler()

@@ -16,7 +16,8 @@ from cfn_custom_resource import CloudFormationCustomResource
 REGION = os.environ['AWS_REGION']
 
 
-class DynamoDbJoinGlobalTable(CloudFormationCustomResource):
+class JoinGlobalTable(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use ARN of global table instead
 
     def validate(self):
@@ -77,4 +78,4 @@ class DynamoDbJoinGlobalTable(CloudFormationCustomResource):
             pass
 
 
-handler = DynamoDbJoinGlobalTable.get_handler()
+handler = JoinGlobalTable.get_handler()

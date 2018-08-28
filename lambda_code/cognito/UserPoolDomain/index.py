@@ -21,7 +21,8 @@ def generate_random_domain_label():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=16))
 
 
-class CognitoUserPoolDomain(CloudFormationCustomResource):
+class UserPoolDomain(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use `{client_pool_id}/{domain}` instead
 
     def validate(self):
@@ -86,4 +87,4 @@ class CognitoUserPoolDomain(CloudFormationCustomResource):
             pass
 
 
-handler = CognitoUserPoolDomain.get_handler()
+handler = UserPoolDomain.get_handler()

@@ -12,6 +12,7 @@ import pip
 import troposphere
 from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants
 from central_helpers import MetadataHelper, vrt
+from custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
 
 parser = argparse.ArgumentParser(description='Build custom resources CloudForamtion template')
 parser.add_argument('--class-dir', help='Where to look for the CustomResource classes',
@@ -66,11 +67,26 @@ def rec_join_path(path_list: typing.List[str]) -> str:
     return path
 
 
-def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[str]:
+class CustomResource:
+    def __init__(self, name: typing.List[str], lambda_path: str, troposphere_class: LambdaBackedCustomResource):
+        self.name = name
+        self.lambda_path = lambda_path
+        self.troposphere_class = troposphere_class
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.troposphere_class == other.troposphere_class
+
+    def __hash__(self):
+        return hash(self.troposphere_class)
+
+
+def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[CustomResource]:
     """
     Find custom resources matching our requirements
     """
-    custom_resources_candidates = set()
+    custom_resources = set()
     for dirpath, dirs, files in os.walk(class_dir):
         for file in files:
             if file.startswith('.'):
@@ -79,31 +95,50 @@ def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[str]
                 continue
             if not file.endswith('.py'):
                 continue
-            file_without_py = file[:-3]
-            basename = os.path.join(dirpath[len(class_dir)+1:], file_without_py)
-            custom_resources_candidates.add(basename)
 
-    custom_resources = set()
-    for entry in custom_resources_candidates:
-        path = os.path.join(lambda_dir, entry)
-        if os.path.isdir(path):
-            mod_path = '.'.join(rec_split_path(entry))
-            custom_resources.add(mod_path)
+            file_without_py = file[:-3]
+            relative_dir = dirpath[len(class_dir) + 1:]
+            fs_path = os.path.join(relative_dir, file_without_py)
+
+            module_location = rec_split_path(fs_path)
+            mod = importlib.import_module(
+                '.' + '.'.join(module_location),
+                os.path.basename(class_dir)
+            )
+
+            for candidate_class_name in dir(mod):
+                if candidate_class_name.startswith('_'):
+                    continue
+                candidate_class = getattr(mod, candidate_class_name)
+                if not isinstance(candidate_class, type):
+                    continue
+                # candidate_class is a class; check for a matching directory in lambda_dir
+
+                lambda_code_dir = rec_join_path([lambda_dir, fs_path, candidate_class_name])
+                if os.path.isdir(lambda_code_dir):
+                    custom_resources.add(CustomResource(
+                        name=[*module_location, candidate_class_name],
+                        lambda_path=lambda_code_dir,
+                        troposphere_class=candidate_class,
+                    ))
 
     return custom_resources
 
 
-def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
-    print("Creating ZIP for resource {resource_name}".format(resource_name=resource_name))
-    with zipfile.ZipFile(os.path.join(output_dir, "{resource_name}.zip".format(resource_name=resource_name)),
+def create_zip_file(custom_resource: CustomResource, output_dir: str):
+    dot_joined_resource_name = '.'.join(custom_resource.name)
+
+    print("Creating ZIP for resource {}".format(dot_joined_resource_name))
+
+    zip_filename = "{}.zip".format(dot_joined_resource_name)
+    zip_full_filename = os.path.join(output_dir, zip_filename)
+    with zipfile.ZipFile(zip_full_filename,
                          mode='w',
                          compression=zipfile.ZIP_DEFLATED) as zip:
 
-        resource_path = resource_name.split('.')
-        resource_path = rec_join_path(resource_path)
-        entries = set(os.scandir(os.path.join(lambda_dir, resource_path)))
+        entries = set(os.scandir(custom_resource.lambda_path))
 
-        # See if there is a top-level `requirements.txt`
+        # See if there is a top-level `requirements.txt` or `test`
         requirements = None
         test = None
         for entry in entries:
@@ -115,7 +150,7 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
         if requirements is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
             entries.remove(requirements)
-            pip_dir = os.path.join(output_dir, resource_name)
+            pip_dir = os.path.join(output_dir, dot_joined_resource_name)
             pip.main(['install', '-r', requirements.path, '-t', pip_dir])
             entries.update(set(os.scandir(pip_dir)))
 
@@ -134,12 +169,9 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
 
             elif entry.is_file():
                 zip_path = entry.path
-                lambda_prefix = "{lambda_dir}/{resource_name}/".format(
-                    lambda_dir=lambda_dir,
-                    resource_name=resource_name,
-                )
+                lambda_prefix = custom_resource.lambda_path
                 if zip_path.startswith(lambda_prefix):
-                    zip_path = zip_path[(len(lambda_prefix)):]
+                    zip_path = zip_path[(len(lambda_prefix)+1):]
                 if requirements is not None and zip_path.startswith(pip_dir):
                     zip_path = zip_path[(len(pip_dir)+1):]
 
@@ -148,8 +180,9 @@ def create_zip_file(lambda_dir: str, resource_name: str, output_dir: str):
         if requirements is not None:
             shutil.rmtree(pip_dir)
 
-    print("ZIP done for resource {resource_name}".format(resource_name=resource_name))
+    print("ZIP done for resource {}".format(dot_joined_resource_name))
     print("")
+    return zip_filename
 
 
 try:
@@ -157,19 +190,18 @@ try:
 except FileExistsError:
     pass
 
+# Import the custom_resources package
 sys.path.insert(0, os.path.dirname(args.class_dir))
 importlib.import_module(os.path.basename(args.class_dir))
 
-for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class_dir):
-    create_zip_file(args.lambda_dir, custom_resource_name, args.output_dir)
+for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir):
+    custom_resource_name_cfn = custom_resource.troposphere_class.cloudformation_name(
+        custom_resource.troposphere_class.name()
+    )
 
-    custom_resource_mod = importlib.import_module(
-        '.' + custom_resource_name, os.path.basename(args.class_dir))
-    custom_resource_name_last_component = custom_resource_name.split('.')[-1]
-    custom_resource_class = getattr(custom_resource_mod, custom_resource_name_last_component)
+    zip_filename = create_zip_file(custom_resource, args.output_dir)
 
-    custom_resource_name_cfn = custom_resource_name.replace('.', '0')
-    role = template.add_resource(custom_resource_class.lambda_role(
+    role = template.add_resource(custom_resource.troposphere_class.lambda_role(
         "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
     ))
     awslambdafunction = template.add_resource(awslambda.Function(
@@ -177,17 +209,16 @@ for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class
         Code=awslambda.Code(
             S3Bucket=troposphere.Ref(s3_bucket),
             S3Key=troposphere.Join('', [troposphere.Ref(s3_path),
-                                        "{custom_resource_name}.zip".format(
-                                            custom_resource_name=custom_resource_name)]),
+                                        zip_filename]),
         ),
         Role=GetAtt(role, 'Arn'),
         Tags=troposphere.Tags(**vrt_tags),
-        **custom_resource_class.function_settings()
+        **custom_resource.troposphere_class.function_settings()
     ))
     template.add_resource(logs.LogGroup(
         "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name_cfn),
         LogGroupName=Sub("/aws/lambda/{custom_resource_name}-${{AWS::StackName}}".format(
-            custom_resource_name=custom_resource_name
+            custom_resource_name='.'.join(custom_resource.name)
         )),
         RetentionInDays=90,
     ))
@@ -195,20 +226,20 @@ for custom_resource_name in defined_custom_resources(args.lambda_dir, args.class
         "{custom_resource_name}ServiceToken".format(custom_resource_name=custom_resource_name_cfn),
         Value=GetAtt(awslambdafunction, 'Arn'),
         Description="ServiceToken for the {custom_resource_name} custom resource".format(
-            custom_resource_name=custom_resource_name
+            custom_resource_name='.'.join(custom_resource.name)
         ),
         Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}ServiceToken".format(
-            custom_resource_name=custom_resource_name
+            custom_resource_name=custom_resource_name_cfn
         )))
     ))
     template.add_output(Output(
         "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
         Value=GetAtt(role, 'Arn'),
         Description="Role used by the {custom_resource_name} custom resource".format(
-            custom_resource_name=custom_resource_name
+            custom_resource_name='.'.join(custom_resource.name)
         ),
         Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}Role".format(
-            custom_resource_name=custom_resource_name,
+            custom_resource_name=custom_resource_name_cfn,
         ))),
     ))
 

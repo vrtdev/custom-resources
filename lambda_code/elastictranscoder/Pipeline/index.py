@@ -16,7 +16,8 @@ def convertToBool(input):
         return input
 
 
-class ElasticTranscoderPipeline(CloudFormationCustomResource):
+class Pipeline(CloudFormationCustomResource):
+    RESOURCE_TYPE_SPEC = None
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Pipeline Id instead
 
     def validate(self):
@@ -76,4 +77,4 @@ class ElasticTranscoderPipeline(CloudFormationCustomResource):
         )
 
 
-handler = ElasticTranscoderPipeline.get_handler()
+handler = Pipeline.get_handler()
