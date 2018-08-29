@@ -65,7 +65,6 @@ class UserPoolClient(LambdaBackedCustomResource):
         return ['CognitoUserPoolClient']
 
 
-
 class UserPoolDomain(LambdaBackedCustomResource):
     """
     Added support for configuring the Cognito Client User Domain.
@@ -108,3 +107,39 @@ class UserPoolDomain(LambdaBackedCustomResource):
         """
         # Keep legacy non-structured name for backward compatibility
         return ['CognitoUserPoolDomain']
+
+
+class UserPoolIdentityProvider(LambdaBackedCustomResource):
+    props = {
+        'UserPoolId': (string_types, True),
+        'ProviderName': (string_types, True),
+        'ProviderType': (string_types, True),
+        'ProviderDetails': (dict, True),
+        'AttributeMapping': (dict, False),
+        'IdpIdentifiers': ([string_types], False),
+    }
+
+    @classmethod
+    def _lambda_policy(cls):
+        """
+        Return the policy that the lambda function needs to function.
+
+        This should only be the extra permissions. It will already have permissions to write logs
+        :return: The policy document
+        :rtype: dict
+
+        """
+        return {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": [
+                        "cognito-idp:UpdateIdentityProvider",
+                        "cognito-idp:DeleteIdentityProvider",
+                        "cognito-idp:CreateIdentityProvider"
+                    ],
+                    "Effect": "Allow",
+                    "Resource": "*"
+                }
+            ]
+        }
