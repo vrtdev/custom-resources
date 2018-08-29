@@ -33,14 +33,21 @@ def _get_custom_resources_stack_name():
 def use_custom_resources_stack_name_parameter(
         template,
         parameter_title="CustomResourcesStack",
-        default_value="custom-resources",
-        description="Name of the custom resources stack",
+        parameter_kwargs_dict=None,
 ):
+    if parameter_kwargs_dict is None:
+        parameter_kwargs_dict = {}
+
+    param_kwargs = {  # defaults
+        'Type': troposphere.constants.STRING,
+        'Default': "custom-resources",
+        'Description': "Name of the custom resources stack",
+    }
+    param_kwargs.update(parameter_kwargs_dict)
+
     p = template.add_parameter(troposphere.Parameter(
         parameter_title,
-        Type=troposphere.constants.STRING,
-        Default=default_value,
-        Description=description,
+        **param_kwargs
     ))
 
     global CUSTOM_RESOURCES_STACK_NAME
