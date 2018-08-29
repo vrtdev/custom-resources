@@ -9,6 +9,8 @@ Parameters:
 import os
 
 from cfn_custom_resource import CloudFormationCustomResource
+from _metadata import CUSTOM_RESOURCE_NAME
+
 
 REGION = os.environ['AWS_REGION']
 
@@ -21,7 +23,7 @@ def convertToBool(input):
 
 
 class UserPoolClient(CloudFormationCustomResource):
-    RESOURCE_TYPE_SPEC = None
+    RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Client Pool Id instead
 
     def validate(self):
