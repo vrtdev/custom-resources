@@ -35,13 +35,13 @@ class LambdaBackedCustomResource(CustomResource):
     def service_token(self):
         return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}ServiceToken".format(
             custom_resources_stack_name=_get_custom_resources_stack_name(),
-            custom_resource_name=self.custom_resource_name(self.name())
+            custom_resource_name=self.cloudformation_name(self.name())
         )))
 
     def role(self):
         return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}Role".format(
             custom_resources_stack_name=_get_custom_resources_stack_name(),
-            custom_resource_name=self.custom_resource_name(self.name())
+            custom_resource_name=self.cloudformation_name(self.name())
         )))
 
     @classmethod
