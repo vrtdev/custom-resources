@@ -30,7 +30,7 @@ class LambdaBackedCustomResource(CustomResource):
 
         super(LambdaBackedCustomResource, self).__init__(*args, **kwargs)
 
-        self.check_deprecation()
+        self.check_deprecation(stacklevel=2)
 
     def service_token(self):
         return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}ServiceToken".format(
@@ -118,7 +118,7 @@ class LambdaBackedCustomResource(CustomResource):
         return settings
 
     @classmethod
-    def check_deprecation(cls):
+    def check_deprecation(cls, stacklevel=1):
         if not cls._deprecated:
             return
         warnings.warn(
@@ -127,7 +127,8 @@ class LambdaBackedCustomResource(CustomResource):
                 t=time.strftime('%Y-%m-%d', time.localtime(cls._deprecated)),
                 m=cls._deprecated_message,
             ),
-            DeprecationWarning
+            DeprecationWarning,
+            stacklevel=stacklevel+1,
         )
         # Sleep for 1 second for every day since this was deprecated
         time.sleep((time.time() - cls._deprecated) / 86400)
