@@ -38,3 +38,9 @@ The following (relative) paths are theaded specially:
    ZIP file. The file itself is not included in the ZIP
 
  * '/test/**': The directory `test` is ignored, including its contents
+
+ * '/_metadata.py': This file is generated at build-time. It contains various
+   variable definitions that may come in handy at run-time, such as:
+
+   - CUSTOM_RESOURCE_NAME: the custom resource name as will be used by depending
+     templates. E.g. "Service@Foobar" for "Custom::Service@Foobar" resources.

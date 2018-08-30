@@ -11,13 +11,14 @@ Requirements:
 import os
 
 from cfn_custom_resource import CloudFormationCustomResource
+from _metadata import CUSTOM_RESOURCE_NAME
 
 
 REGION = os.environ['AWS_REGION']
 
 
 class JoinGlobalTable(CloudFormationCustomResource):
-    RESOURCE_TYPE_SPEC = None
+    RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use ARN of global table instead
 
     def validate(self):

@@ -6,6 +6,8 @@ import string
 import typing
 
 from cfn_custom_resource import CloudFormationCustomResource
+from _metadata import CUSTOM_RESOURCE_NAME
+
 
 REGION = os.environ['AWS_REGION']
 
@@ -55,7 +57,7 @@ class Parameter(CloudFormationCustomResource):
 
             Same Update restrictions apply.
     """
-    RESOURCE_TYPE_SPEC = None
+    RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Name instead
 
     def validate(self):

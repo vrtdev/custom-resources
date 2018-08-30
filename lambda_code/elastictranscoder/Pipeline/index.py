@@ -5,6 +5,8 @@ Custom Resource for managing Elastic Transcoder Pipelines.
 import os
 
 from cfn_custom_resource import CloudFormationCustomResource
+from _metadata import CUSTOM_RESOURCE_NAME
+
 
 REGION = os.environ['AWS_REGION']
 
@@ -17,7 +19,7 @@ def convertToBool(input):
 
 
 class Pipeline(CloudFormationCustomResource):
-    RESOURCE_TYPE_SPEC = None
+    RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Pipeline Id instead
 
     def validate(self):

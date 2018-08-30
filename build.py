@@ -147,12 +147,21 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
             elif entry.name == 'test':
                 test = entry
 
+        pip_dir = os.path.join(output_dir, dot_joined_resource_name)
+
         if requirements is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
             entries.remove(requirements)
-            pip_dir = os.path.join(output_dir, dot_joined_resource_name)
             pip.main(['install', '-r', requirements.path, '-t', pip_dir])
-            entries.update(set(os.scandir(pip_dir)))
+
+        with open(os.path.join(pip_dir, "_metadata.py"), "w") as f:
+            f.write("CUSTOM_RESOURCE_NAME = \"{}\"\n".format(
+                custom_resource.troposphere_class.custom_resource_name(
+                    custom_resource.troposphere_class.name()
+                )
+            ))
+
+        entries.update(set(os.scandir(pip_dir)))
 
         if test is not None:
             entries.remove(test)

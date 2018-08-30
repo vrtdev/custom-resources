@@ -16,6 +16,8 @@ import os
 import boto3
 
 from cfn_custom_resource import CloudFormationCustomResource
+from _metadata import CUSTOM_RESOURCE_NAME
+
 
 REGION = os.environ['AWS_REGION']
 
@@ -28,7 +30,7 @@ def dict_element_copy_if_exists(
 
 
 class FindAmi(CloudFormationCustomResource):
-    RESOURCE_TYPE_SPEC = None
+    RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Return AMI ID as physical ID
 
     def validate(self):

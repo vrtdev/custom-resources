@@ -3,6 +3,8 @@ import random
 import string
 
 from cfn_custom_resource import CloudFormationCustomResource
+from _metadata import CUSTOM_RESOURCE_NAME
+
 
 REGION = os.environ['AWS_REGION']
 
@@ -22,7 +24,7 @@ def generate_random_domain_label():
 
 
 class UserPoolDomain(CloudFormationCustomResource):
-    RESOURCE_TYPE_SPEC = None
+    RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use `{client_pool_id}/{domain}` instead
 
     def validate(self):
