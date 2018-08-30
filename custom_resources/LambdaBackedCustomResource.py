@@ -32,16 +32,18 @@ class LambdaBackedCustomResource(CustomResource):
 
         self.check_deprecation(stacklevel=2)
 
-    def service_token(self):
+    @classmethod
+    def service_token(cls):
         return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}ServiceToken".format(
             custom_resources_stack_name=_get_custom_resources_stack_name(),
-            custom_resource_name=self.cloudformation_name(self.name())
+            custom_resource_name=cls.cloudformation_name(cls.name())
         )))
 
-    def role(self):
+    @classmethod
+    def role(cls):
         return ImportValue(Sub("{custom_resources_stack_name}-{custom_resource_name}Role".format(
             custom_resources_stack_name=_get_custom_resources_stack_name(),
-            custom_resource_name=self.cloudformation_name(self.name())
+            custom_resource_name=cls.cloudformation_name(cls.name())
         )))
 
     @classmethod
