@@ -34,25 +34,31 @@ class JoinGlobalTable(CloudFormationCustomResource):
     def create(self):
         boto_client = self.get_boto3_client('dynamodb')
         try:
+            print(f"Trying to create global table {self.table_name}")
             global_table = boto_client.create_global_table(
                 GlobalTableName=self.table_name,
                 ReplicationGroup=[
                     {'RegionName': REGION}
                 ],
             )
+            print("done")
 
         except boto_client.exceptions.GlobalTableAlreadyExistsException:
             try:
+                print("Global table already exists, trying to join this region to the global table")
                 global_table = boto_client.update_global_table(
                     GlobalTableName=self.table_name,
                     ReplicaUpdates=[
                         {'Create': {'RegionName': REGION}}
                     ],
                 )
+                print("done")
             except boto_client.exceptions.ReplicaAlreadyExistsException:
-                raise RuntimeError("This region is already joined to the GlobalTable. Not taking ownership of this Join.")
+                raise RuntimeError("This region is already joined to the GlobalTable. "
+                                   "Not taking ownership of this Join.")
 
         self.physical_resource_id = global_table['GlobalTableDescription']['GlobalTableArn']
+        print(f"GlobalTableArn: {self.physical_resource_id}")
 
         return {}
 
@@ -63,20 +69,22 @@ class JoinGlobalTable(CloudFormationCustomResource):
 
         # Nothing else can change
         # Ignore request succesfully
+        print("Ignoring update")
         return {}
 
     def delete(self):
         boto_client = self.get_boto3_client('dynamodb')
         try:
+            print("Trying to delete global table {self.table_name}")
             boto_client.update_global_table(
                 GlobalTableName=self.table_name,
                 ReplicaUpdates=[
                     {'Delete': {'RegionName': REGION}}
                 ],
             )
+            print("done")
         except boto_client.exceptions.GlobalTableNotFoundException:
-            # Assume delete was successful
-            pass
+            print("Delete failed, assuming success...")
 
 
 handler = JoinGlobalTable.get_handler()
