@@ -50,7 +50,7 @@ class JoinGlobalTable(CloudFormationCustomResource):
                     ],
                 )
             except boto_client.exceptions.ReplicaAlreadyExistsException:
-                pass
+                raise RuntimeError("This region is already joined to the GlobalTable. Not taking ownership of this Join.")
 
         self.physical_resource_id = global_table['GlobalTableDescription']['GlobalTableArn']
 

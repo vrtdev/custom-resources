@@ -23,6 +23,11 @@ class JoinGlobalTable(LambdaBackedCustomResource):
         }
 
     @classmethod
+    def _update_lambda_settings(cls, settings):
+        settings['Timeout'] = 60  # Default timeout of 3 seconds is not always long enough.
+        return settings
+
+    @classmethod
     def name(cls):
         """
         :rtype: List[str]
