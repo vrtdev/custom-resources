@@ -1,4 +1,11 @@
-"""CloudFormation template to create custom resource Lambda's"""
+"""
+Build script for custom resources.
+
+This script scans the `class-dir` and `lambda-dir` directories to generate a
+list of defined custom resources. For each discovered resource, it creates a
+ZIP-file, and adds the resource to the generated CloudFormation template to
+be deployed.
+"""
 import os
 import importlib
 import sys
@@ -48,6 +55,11 @@ template_helper.add_parameter_group("Lambda code location", [s3_bucket, s3_path]
 
 
 def rec_split_path(path: str) -> typing.List[str]:
+    """
+    Split a path in its components.
+
+    Much like os.path.split(), but "recursively".
+    """
     l = []
     head = path
     while len(head) > 0:
@@ -57,6 +69,11 @@ def rec_split_path(path: str) -> typing.List[str]:
 
 
 def rec_join_path(path_list: typing.List[str]) -> str:
+    """
+    Join components in to a path.
+
+    Much like os.path.join(), but "recursively".
+    """
     if len(path_list) == 0:
         return ''
     if len(path_list) == 1:
@@ -68,12 +85,17 @@ def rec_join_path(path_list: typing.List[str]) -> str:
 
 
 class CustomResource:
-    def __init__(self, name: typing.List[str], lambda_path: str, troposphere_class: LambdaBackedCustomResource):
+    def __init__(
+            self,
+            name: typing.List[str],
+            lambda_path: str,
+            troposphere_class: LambdaBackedCustomResource
+    ):
         self.name = name
         self.lambda_path = lambda_path
         self.troposphere_class = troposphere_class
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return False
         return self.troposphere_class == other.troposphere_class
@@ -84,7 +106,7 @@ class CustomResource:
 
 def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[CustomResource]:
     """
-    Find custom resources matching our requirements
+    Find custom resources matching our requirements.
     """
     custom_resources = set()
     for dirpath, dirs, files in os.walk(class_dir):
@@ -96,6 +118,7 @@ def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[Cust
             if not file.endswith('.py'):
                 continue
 
+            # load the found Python module
             file_without_py = file[:-3]
             relative_dir = dirpath[len(class_dir) + 1:]
             fs_path = os.path.join(relative_dir, file_without_py)
@@ -139,21 +162,26 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
         entries = set(os.scandir(custom_resource.lambda_path))
 
         # See if there is a top-level `requirements.txt` or `test`
-        requirements = None
-        test = None
+        requirements_file = None
+        test_file = None
         for entry in entries:
             if entry.name == 'requirements.txt':
-                requirements = entry
+                requirements_file = entry
             elif entry.name == 'test':
-                test = entry
+                test_file = entry
 
         pip_dir = os.path.join(output_dir, dot_joined_resource_name)
+        os.mkdir(pip_dir)
 
-        if requirements is not None:
+        if requirements_file is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
-            entries.remove(requirements)
-            pip.main(['install', '-r', requirements.path, '-t', pip_dir])
+            entries.remove(requirements_file)
+            pip.main(['install', '-r', requirements_file.path, '-t', pip_dir])
 
+        if test_file is not None:
+            entries.remove(test_file)
+
+        # Generate _metadata.py file
         with open(os.path.join(pip_dir, "_metadata.py"), "w") as f:
             f.write("CUSTOM_RESOURCE_NAME = \"{}\"\n".format(
                 custom_resource.troposphere_class.custom_resource_name(
@@ -161,10 +189,8 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
                 )
             ))
 
+        # Add installed/generated files to list to include in ZIP
         entries.update(set(os.scandir(pip_dir)))
-
-        if test is not None:
-            entries.remove(test)
 
         # add everything (recursively) to the zip file
         while len(entries):
@@ -181,13 +207,12 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
                 lambda_prefix = custom_resource.lambda_path
                 if zip_path.startswith(lambda_prefix):
                     zip_path = zip_path[(len(lambda_prefix)+1):]
-                if requirements is not None and zip_path.startswith(pip_dir):
+                if zip_path.startswith(pip_dir):
                     zip_path = zip_path[(len(pip_dir)+1):]
 
                 zip.write(entry.path, zip_path)
 
-        if requirements is not None:
-            shutil.rmtree(pip_dir)
+        shutil.rmtree(pip_dir)
 
     print("ZIP done for resource {}".format(dot_joined_resource_name))
     print("")
