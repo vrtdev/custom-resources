@@ -18,7 +18,6 @@ import zipfile
 import pip
 import troposphere
 from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants
-from central_helpers import MetadataHelper, vrt
 from custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
 
 parser = argparse.ArgumentParser(description='Build custom resources CloudForamtion template')
@@ -33,15 +32,14 @@ args = parser.parse_args()
 
 
 template = Template("Custom Resources")
-template_helper = MetadataHelper(template)
-vrt_tags = vrt.add_tags(template)
 
 s3_bucket = template.add_parameter(troposphere.Parameter(
     "S3Bucket",
     Type=constants.STRING,
     Description="S3 bucket where the ZIP files are located",
 ))
-template_helper.add_parameter_label(s3_bucket, "S3 bucket")
+template.set_parameter_label(s3_bucket, "S3 bucket")
+lambda_code_location = template.add_parameter_to_group(s3_bucket, "Lambda code location")
 
 s3_path = template.add_parameter(troposphere.Parameter(
     "S3Path",
@@ -49,9 +47,8 @@ s3_path = template.add_parameter(troposphere.Parameter(
     Default='',
     Description="Path prefix where the ZIP files are located (should probably end with a '/')",
 ))
-template_helper.add_parameter_label(s3_path, "S3 path")
-
-template_helper.add_parameter_group("Lambda code location", [s3_bucket, s3_path])
+template.set_parameter_label(s3_path, "S3 path")
+template.add_parameter_to_group(s3_path, lambda_code_location)
 
 
 def rec_split_path(path: str) -> typing.List[str]:
@@ -246,7 +243,6 @@ for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir)
                                         zip_filename]),
         ),
         Role=GetAtt(role, 'Arn'),
-        Tags=troposphere.Tags(**vrt_tags),
         **custom_resource.troposphere_class.function_settings()
     ))
     template.add_resource(logs.LogGroup(
