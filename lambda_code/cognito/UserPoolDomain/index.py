@@ -3,7 +3,10 @@ import random
 import string
 
 from cfn_custom_resource import CloudFormationCustomResource
-from _metadata import CUSTOM_RESOURCE_NAME
+try:
+    from _metadata import CUSTOM_RESOURCE_NAME
+except ImportError:
+    CUSTOM_RESOURCE_NAME = 'dummy'
 
 
 REGION = os.environ['AWS_REGION']
