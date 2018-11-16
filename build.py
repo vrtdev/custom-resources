@@ -15,7 +15,11 @@ import shutil
 import typing
 import zipfile
 
-import pip
+try:
+    from pip import main as pipmain  # pip 9
+except ImportError:
+    from pip._internal import main as pipmain  # pip 10
+
 import troposphere
 from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants
 from central_helpers import MetadataHelper, vrt
@@ -176,7 +180,7 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
         if requirements_file is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
             entries.remove(requirements_file)
-            pip.main(['install', '-r', requirements_file.path, '-t', pip_dir])
+            pipmain(['install', '-r', requirements_file.path, '-t', pip_dir])
 
         if test_file is not None:
             entries.remove(test_file)
