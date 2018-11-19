@@ -85,16 +85,16 @@ class Parameter(CloudFormationCustomResource):
 
         if self.return_value_hash:
             if self.random_value:
+                # Password is randomly generated. Use current time as "hash".
+                # We can't re-generate the same ValueHash this way, but we fail
+                # Update's anyway in this case.
+                attr['ValueHash'] = datetime.datetime.utcnow().isoformat()
+            else:
                 # There really is no reason for this case. The Value is given as input
                 # parameter, so it's not sensitive. Requesting a hash is silly.
                 # Use MD5 to "hide" the Value somewhat, but no security guarantees
                 # can be given anyway
                 attr['ValueHash'] = hashlib.md5(self.value.encode('utf-8')).hexdigest()
-            else:
-                # Password is randomly generated. Use current time as "hash".
-                # We can't re-generate the same ValueHash this way, but we fail
-                # Update's anyway in this case.
-                attr['ValueHash'] = datetime.datetime.utcnow().isoformat()
 
         return attr
 
