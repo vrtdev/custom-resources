@@ -38,6 +38,14 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
             'SubjectAlternativeNames', None)
         self.tags = self.resource_properties.get('Tags', [])
 
+        # strip trailing dots
+        if self.domain_name.endswith('.'):
+            self.domain_name = self.domain_name[:-1]
+        if self.subject_alternative_names is not None:
+            for i, san in enumerate(self.subject_alternative_names):
+                if san.endswith('.'):
+                    self.subject_alternative_names[i] = san[:-1]
+
     @functools.lru_cache()
     def regional_acm_client(self):
         return self.get_boto3_session().client('acm', region_name=self.region)
