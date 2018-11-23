@@ -19,6 +19,10 @@ class Tags(CloudFormationCustomResource):
         # Can be removed once https://github.com/iRobotCorporation/cfn-custom-resource/pull/7 is accepted,
         # merged & released
 
+    def validate(self):
+        self.omit = self.resource_properties.get('Omit', [])
+        self.set = self.resource_properties.get('Set', {})
+
     def create(self):
         stack_region = self.stack_id.split(':')[3]
         boto_client_in_region = self.get_boto3_session().client(
@@ -30,14 +34,23 @@ class Tags(CloudFormationCustomResource):
             StackName=self.stack_id,
         )
         stack_description = stack_description['Stacks'][0]
-        tags = stack_description['Tags']
+        tags_dict = {
+            tag['Key']: tag['Value']
+            for tag in stack_description['Tags']
+        }
+
+        for key in self.omit:
+            tags_dict.pop(key, None)
+
+        for key, value in self.set.items():
+            tags_dict[key] = value
 
         return {
-            'TagList': tags,
-            'TagDict': {
-                tag['Key']: tag['Value']
-                for tag in tags
-            },
+            'TagDict': tags_dict,
+            'TagList': [
+                {'Key': k, 'Value': v}
+                for k, v in tags_dict.items()
+            ],
         }
 
     def update(self):
