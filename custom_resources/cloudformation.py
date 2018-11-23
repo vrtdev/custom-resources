@@ -7,6 +7,8 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 class Tags(LambdaBackedCustomResource):
     props = {
+        'Omit': ([string_types], False),  # Keys to remove from list
+        'Set': (dict, False),  # Keys to set/override/add, with the new values
         'Dummy': (string_types, False),  # Dummy parameter to trigger updates
     }
 
