@@ -25,6 +25,9 @@ class Tags(CloudFormationCustomResource):
 
     def create(self):
         stack_region = self.stack_id.split(':')[3]
+
+        print(f"Getting tags set on {self.stack_id} in region {stack_region}")
+
         boto_client_in_region = self.get_boto3_session().client(
             'cloudformation',
             region_name=stack_region
@@ -33,17 +36,23 @@ class Tags(CloudFormationCustomResource):
         stack_description = boto_client_in_region.describe_stacks(
             StackName=self.stack_id,
         )
+
         stack_description = stack_description['Stacks'][0]
         tags_dict = {
             tag['Key']: tag['Value']
             for tag in stack_description['Tags']
         }
+        print("Found tags:")
+        print(json.dumps(tags_dict))
 
         for key in self.omit:
             tags_dict.pop(key, None)
 
         for key, value in self.set.items():
             tags_dict[key] = value
+
+        print("Tags after Omit/Set:")
+        print(json.dumps(tags_dict))
 
         return {
             'TagDict': tags_dict,
