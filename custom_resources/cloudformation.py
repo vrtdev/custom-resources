@@ -6,6 +6,15 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
 class Tags(LambdaBackedCustomResource):
+    """
+    Custom Resource to extract tags from the CloudFormation Stack, and
+    expose them via GetAtt() to other resources that don't automatically
+    inherit the tags from the stack (e.g. custom resources).
+
+    Caveat: Some resources fail when no tags are present. It is advisable to
+    always configure a tag to be added (via Set={"foo":"bar"}) to avoid this
+    case.
+    """
     props = {
         'Omit': ([string_types], False),  # Keys to remove from list
         'Set': (dict, False),  # Keys to set/override/add, with the new values
