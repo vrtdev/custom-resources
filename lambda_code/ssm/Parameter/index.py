@@ -136,13 +136,13 @@ class Parameter(CloudFormationCustomResource):
 
             for tag in old_tags:
                 if tag['Key'] not in new_tags_keys:
-                    to_delete.append(tag)
+                    to_delete.append(tag['Key'])
 
             if len(to_delete) > 0:
                 ssm.remove_tags_from_resource(
                     ResourceType='Parameter',
                     ResourceId=self.physical_resource_id,
-                    Tags=to_delete,
+                    TagKeys=to_delete,
                 )
 
         ssm.add_tags_to_resource(
