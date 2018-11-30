@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+import typing
 
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
@@ -50,6 +51,40 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
     def regional_acm_client(self):
         return self.get_boto3_session().client('acm', region_name=self.region)
 
+    def update_tags(self,
+                    new_tags: typing.List[typing.Dict[str, str]],
+                    old_tags: typing.List[typing.Dict[str, str]] = None
+                    ) -> None:
+        if old_tags is None:
+            old_tags = []
+
+        if len(old_tags) > 0:
+            new_tags_keys = {
+                tag['Key']: True
+                for tag in new_tags
+            }
+
+            to_delete = []
+
+            for tag in old_tags:
+                if tag['Key'] not in new_tags_keys:
+                    to_delete.append({
+                        'Key': tag['Key']
+                        # omit 'value' to remove the tag regardless of value
+                    })
+
+            if len(to_delete) > 0:
+                self.regional_acm_client().remove_tags_from_certificate(
+                    CertificateArn=self.physical_resource_id,
+                    Tags=to_delete,
+                )
+
+        if len(new_tags) > 0:
+            self.regional_acm_client().add_tags_to_certificate(
+                CertificateArn=self.physical_resource_id,
+                Tags=new_tags,
+            )
+
     def create(self):
         idempotency_token = NOT_ALLOWED_IN_TOKEN.sub('', self.context.aws_request_id)[:32]
 
@@ -67,10 +102,7 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
 
         self.physical_resource_id = response['CertificateArn']
 
-        self.regional_acm_client().add_tags_to_certificate(
-            CertificateArn=self.physical_resource_id,
-            Tags=self.tags,
-        )
+        self.update_tags(self.tags)
 
         return self.get_attributes()
 
@@ -95,16 +127,10 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
             return self.create()
             # CloudFormation will call delete() on the old resource
 
-        if self.has_property_changed('Tags'):
-            self.regional_acm_client().remove_tags_from_certificate(
-                CertificateArn=self.physical_resource_id,
-                Tags=self.old_resource_properties.get('Tags', []),
-            )
-
-            self.regional_acm_client().add_tags_to_certificate(
-                CertificateArn=self.physical_resource_id,
-                Tags=self.tags,
-            )
+        self.update_tags(
+            new_tags=self.tags,
+            old_tags=self.old_resource_properties.get('Tags', [])
+        )
 
         return self.get_attributes()
 
