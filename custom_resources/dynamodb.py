@@ -34,3 +34,26 @@ class JoinGlobalTable(LambdaBackedCustomResource):
         """
         # Keep legacy non-structured name for backward compatibility
         return ['DynamoDbJoinGlobalTable']
+
+
+class Item(LambdaBackedCustomResource):
+    props = {
+        'Region': (string_types, False),
+        'TableName': (string_types, True),
+        'ItemKey': (dict, True),
+        'ItemValue': (dict, False),
+    }
+
+    @classmethod
+    def _lambda_policy(cls):
+        return {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:DeleteItem",
+                    "dynamodb:PutItem",
+                ],
+                "Resource": "*",
+            }],
+        }
