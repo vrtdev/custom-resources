@@ -65,14 +65,19 @@ class Item(CloudFormationCustomResource):
         # Condition to determine if an object doesn't exist (Key attributes are not set)
         # Note that we never validate that the ItemKey is indeed the table key
         not_exists_condition = " AND ".join([
-            f"attribute_not_exists({k})"
-            for k in self.item_key.keys()
+            f"attribute_not_exists(#{i})"
+            for i, k in enumerate(self.item_key.keys())
         ])
+        not_exists_condition_attribute_names = {
+            f"#{i}": k
+            for i, k in enumerate(self.item_key.keys())
+        }
 
         self.regional_dynamodb_client().put_item(
             TableName=self.table_name,
             Item=self.construct_item(),
             ConditionExpression=not_exists_condition,
+            ExpressionAttributeNames=not_exists_condition_attribute_names,
         )  # may raise
 
         self.physical_resource_id = self.construct_physical_id()
