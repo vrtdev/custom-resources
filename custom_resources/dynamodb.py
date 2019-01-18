@@ -42,6 +42,7 @@ class Item(LambdaBackedCustomResource):
         'TableName': (string_types, True),
         'ItemKey': (dict, True),
         'ItemValue': (dict, False),
+        'Overwrite': (bool, False),
     }
 
     @classmethod
