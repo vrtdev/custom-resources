@@ -9,6 +9,7 @@ Parameters:
 """
 import functools
 import os
+from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
@@ -31,6 +32,7 @@ class Item(CloudFormationCustomResource):
         self.table_name = self.resource_properties['TableName']
         self.item_key = self.resource_properties['ItemKey']
         self.item_value = self.resource_properties.get('ItemValue', {})
+        self.overwrite = strtobool(self.resource_properties.get('Overwrite', 'false'))
 
         for key in self.item_key.keys():
             if key in self.item_value:
@@ -62,22 +64,23 @@ class Item(CloudFormationCustomResource):
         # CloudFormation may call `Delete` after a failed `Create`.
         # delay setting the physical ID until after the PutItem() succeeds
 
-        # Condition to determine if an object doesn't exist (Key attributes are not set)
-        # Note that we never validate that the ItemKey is indeed the table key
-        not_exists_condition = " AND ".join([
-            f"attribute_not_exists(#{i})"
-            for i, k in enumerate(self.item_key.keys())
-        ])
-        not_exists_condition_attribute_names = {
-            f"#{i}": k
-            for i, k in enumerate(self.item_key.keys())
-        }
+        not_exist_extra_params = {}
+        if not self.overwrite:
+            # Condition to determine if an object doesn't exist (Key attributes are not set)
+            # Note that we never validate that the ItemKey is indeed the table key
+            not_exist_extra_params['ConditionExpression'] = " AND ".join([
+                f"attribute_not_exists(#{i})"
+                for i, k in enumerate(self.item_key.keys())
+            ])
+            not_exist_extra_params['ExpressionAttributeNames'] = {
+                f"#{i}": k
+                for i, k in enumerate(self.item_key.keys())
+            }
 
         self.regional_dynamodb_client().put_item(
             TableName=self.table_name,
             Item=self.construct_item(),
-            ConditionExpression=not_exists_condition,
-            ExpressionAttributeNames=not_exists_condition_attribute_names,
+            **not_exist_extra_params,
         )  # may raise
 
         self.physical_resource_id = self.construct_physical_id()

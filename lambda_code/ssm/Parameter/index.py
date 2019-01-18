@@ -4,6 +4,7 @@ import os
 import random
 import string
 import typing
+from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
@@ -74,8 +75,8 @@ class Parameter(CloudFormationCustomResource):
 
         self.key_id = self.resource_properties.get('KeyId', None)
         self.tags = self.resource_properties.get('Tags', [])
-        self.return_value = self.resource_properties.get('ReturnValue', False)
-        self.return_value_hash = self.resource_properties.get('ReturnValueHash', False)
+        self.return_value = strtobool(self.resource_properties.get('ReturnValue', 'false'))
+        self.return_value_hash = strtobool(self.resource_properties.get('ReturnValueHash', 'false'))
 
     def attributes(self):
         attr = {}
