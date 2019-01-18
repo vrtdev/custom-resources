@@ -9,6 +9,7 @@ Parameters:
 """
 import functools
 import os
+from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
@@ -31,7 +32,7 @@ class Item(CloudFormationCustomResource):
         self.table_name = self.resource_properties['TableName']
         self.item_key = self.resource_properties['ItemKey']
         self.item_value = self.resource_properties.get('ItemValue', {})
-        self.overwrite = self.resource_properties.get('Overwrite', False)
+        self.overwrite = strtobool(self.resource_properties.get('Overwrite', 'false'))
 
         for key in self.item_key.keys():
             if key in self.item_value:
