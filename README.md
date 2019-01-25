@@ -16,6 +16,9 @@ A custom resources consists of minimum:
    file `index.py` is called, but that can be overridden by changing the
    `handler`-setting in the `_update_lambda_settings()`-hook.
 
+And preferably:
+ * A (set of) integration tests in the `test` directory.
+
 The python class defines the custom resource as it can be used in Troposphere
 templates. It should derive from the `LambdaBackedCustomResource` class. You
 can use an arbitrary hierarchy under the `custom_resources` package.
@@ -37,7 +40,8 @@ The following (relative) paths are treated specially:
  * '/requirements.txt`: This file is interpreted to add dependencies in the
    ZIP file. The file itself is not included in the ZIP
 
- * '/test/**': The directory `test` is ignored, including its contents
+ * '/test/**': The directory `test` is ignored, including its contents. This
+   is the ideal location for unit tests.
 
  * '/_metadata.py': This file is generated at build-time. It contains various
    variable definitions that may come in handy at run-time, such as:
