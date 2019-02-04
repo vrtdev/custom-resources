@@ -18,7 +18,19 @@ class BackupPlan(CloudFormationCustomResource):
         self.backup_plan = self.resource_properties['BackupPlan']
         self.backup_plan_tags = self.resource_properties.get('BackupPlanTags', [])
 
+        # Replace string to int for some key's
+        for rule in self.backup_plan["Rules"]:
+            for key in ["StartWindowMinutes", "CompletionWindowMinutes"]:
+                try:
+                    rule[key] = int(rule[key])
+                except KeyError:
+                    pass
 
+            for key in ["MoveToColdStorageAfterDays", "DeleteAfterDays"]:
+                try:
+                    rule["Lifecycle"][key] = int(rule["Lifecycle"][key])
+                except KeyError:
+                    pass
 
     def create(self):
         bu = self.get_boto3_client('backup')
