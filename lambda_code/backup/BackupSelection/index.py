@@ -18,7 +18,6 @@ class BackupPlan(CloudFormationCustomResource):
         self.backup_plan_id = self.resource_properties['BackupPlanId']
         self.backup_selection = self.resource_properties['BackupSelection']
 
-
     def create(self):
         bu = self.get_boto3_client('backup')
 
@@ -42,7 +41,7 @@ class BackupPlan(CloudFormationCustomResource):
     def delete(self):
         bu = self.get_boto3_client('backup')
         try:
-            bu.delete_backup_selection(BackupPlanId=self.backup_selection, SelectionId=self.physical_resource_id)
+            bu.delete_backup_selection(BackupPlanId=self.backup_plan_id, SelectionId=self.physical_resource_id)
         except (bu.exceptions.ResourceNotFoundException,
                 bu.exceptions.InvalidParameterException):
             # Assume already deleted
