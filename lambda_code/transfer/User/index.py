@@ -13,15 +13,15 @@ class User(CloudFormationCustomResource):
         HomeDirectory: str: home directory folder in bucket
     """
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
-    DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True
+    DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use User Name instead
 
     def validate(self):
-        self.role = self.resource_properties.get('Role')
+        self.role = self.resource_properties['Role']
         self.policy = self.resource_properties.get('Policy')
-        self.server_id = self.resource_properties.get('ServerId')
-        self.ssh_key = self.resource_properties.get('SshPublicKeyBody')
-        self.username = self.resource_properties.get('UserName')
-        self.home_dir = self.resource_properties.get('HomeDirectory', '/{}'.format(self.username))
+        self.server_id = self.resource_properties['ServerId']
+        self.ssh_key = self.resource_properties['SshPublicKeyBody']
+        self.username = self.resource_properties['UserName']
+        self.home_dir = self.resource_properties.get('HomeDirectory', f'/{self.username}')
 
     @staticmethod
     def add_if_not_none(params, key, value):
@@ -45,6 +45,7 @@ class User(CloudFormationCustomResource):
         params = self.build_params()
         params['SshPublicKeyBody'] = self.ssh_key
         transfer_client.create_user(**params)
+        self.physical_resource_id = self.username
 
         return {'ServerId': self.server_id, 'UserName': self.username}
 

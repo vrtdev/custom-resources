@@ -64,25 +64,25 @@ class Server(CloudFormationCustomResource):
 
         params = self.build_params()
         response = transfer_client.create_server(**params)
-        self.server_id = response['ServerId']
+        self.physical_resource_id = response['ServerId']
 
-        return {'ServerId': self.server_id}
+        return {'ServerId': self.physical_resource_id}
 
     def update(self):
         transfer_client = self.get_boto3_client('transfer')
 
         params = self.build_params()
-        params['ServerId'] = self.server_id
+        params['ServerId'] = self.physical_resource_id
         transfer_client.update_server(**params)
 
-        return {'ServerId': self.server_id}
+        return {'ServerId': self.physical_resource_id}
 
     def delete(self):
         transfer_client = self.get_boto3_client('transfer')
 
-        transfer_client.delete_server(ServerId=self.server_id)
+        transfer_client.delete_server(ServerId=self.physical_resource_id)
 
-        return {'ServerId': self.server_id}
+        return {'ServerId': self.physical_resource_id}
 
 
 handler = Server.get_handler()
