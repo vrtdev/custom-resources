@@ -8,7 +8,7 @@ class User(CloudFormationCustomResource):
         Role: str: role for user, should include permissions to access a bucket
         Policy: str: policy for limiting access of user
         ServerId: str: the transfer server id
-        SshPublicKeyBody: str: base64 encoded public key for user
+        SshPublicKeyBody: str: public key, see AWS Transfer docs for info on generating one
         UserName: str: name of user
         HomeDirectory: str: home directory folder in bucket
     """
@@ -53,7 +53,7 @@ class User(CloudFormationCustomResource):
         transfer_client = self.get_boto3_client('transfer')
 
         params = self.build_params()
-        transfer_client.update_user(**params)
+        transfer_client.update_user(**params)  # server id does not change when server is updated, so this should work
 
         return {'ServerId': self.server_id, 'UserName': self.username}
 
