@@ -28,6 +28,9 @@ class User(CloudFormationCustomResource):
         if value is not None:
             params[key] = value
 
+    def construct_physical_id(self):
+        return f"{self.server_id}/{self.username}"
+
     def build_params(self):
         required = {
             'HomeDirectory': self.home_dir,
@@ -45,11 +48,16 @@ class User(CloudFormationCustomResource):
         params = self.build_params()
         params['SshPublicKeyBody'] = self.ssh_key
         transfer_client.create_user(**params)
-        self.physical_resource_id = self.username
+        self.physical_resource_id = self.construct_physical_id()
 
         return {'ServerId': self.server_id, 'UserName': self.username}
 
     def update(self):
+        new_physical_id = self.construct_physical_id()
+
+        if self.physical_resource_id != new_physical_id:
+            return self.create()
+
         transfer_client = self.get_boto3_client('transfer')
 
         params = self.build_params()
