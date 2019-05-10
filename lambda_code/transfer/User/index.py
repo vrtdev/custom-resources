@@ -42,6 +42,9 @@ class User(CloudFormationCustomResource):
 
         return required
 
+    def get_attributes(self):
+        return {'ServerId': self.server_id, 'UserName': self.username}
+
     def create(self):
         transfer_client = self.get_boto3_client('transfer')
 
@@ -50,27 +53,26 @@ class User(CloudFormationCustomResource):
         transfer_client.create_user(**params)
         self.physical_resource_id = self.construct_physical_id()
 
-        return {'ServerId': self.server_id, 'UserName': self.username}
+        return self.get_attributes()
 
     def update(self):
         new_physical_id = self.construct_physical_id()
 
         if self.physical_resource_id != new_physical_id:
             return self.create()
+            # CloudFormation will call delete() on previous physical_id
 
         transfer_client = self.get_boto3_client('transfer')
 
         params = self.build_params()
         transfer_client.update_user(**params)
 
-        return {'ServerId': self.server_id, 'UserName': self.username}
+        return self.get_attributes()
 
     def delete(self):
         transfer_client = self.get_boto3_client('transfer')
 
         transfer_client.delete_user(ServerId=self.server_id, UserName=self.username)
-
-        return {'ServerId': self.server_id, 'UserName': self.username}
 
 
 handler = User.get_handler()
