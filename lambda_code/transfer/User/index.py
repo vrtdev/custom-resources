@@ -61,7 +61,7 @@ class User(CloudFormationCustomResource):
         transfer_client = self.get_boto3_client('transfer')
 
         params = self.build_params()
-        transfer_client.update_user(**params)  # server id does not change when server is updated, so this should work
+        transfer_client.update_user(**params)
 
         return {'ServerId': self.server_id, 'UserName': self.username}
 
