@@ -24,6 +24,7 @@ class S3Object(CloudFormationCustomResource):
         self.bucket = self.resource_properties['Bucket']
         self.key = self.resource_properties['Key']
         self.body = self.resource_properties.get('Body', '')
+        self.metadata = self.resource_properties('Metadata', {})
 
         if not isinstance(self.body, str):
             self.body = json.dumps(self.body)
@@ -36,6 +37,7 @@ class S3Object(CloudFormationCustomResource):
             Bucket=self.bucket,
             Key=self.key,
             Body=self.body.encode('utf-8'),
+            Metadata=self.metadata,
         )
 
     def update(self):

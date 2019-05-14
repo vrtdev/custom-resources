@@ -9,6 +9,7 @@ class Object(LambdaBackedCustomResource):
         'Bucket': (string_types, True),  # Bucket name
         'Key': (string_types, True),  # Location within bucket
         'Body': (object, False),  # string, or JSON-able content. Default: empty file
+        'Metadata': (object, False),  # dict, default: {}
     }
 
     @classmethod
