@@ -60,7 +60,7 @@ class Server(CloudFormationCustomResource):
         return required
 
     def get_attributes(self):
-        return {'ServerId': self.server_id}
+        return {'ServerId': self.physical_resource_id}
 
     def create(self):
         transfer_client = self.get_boto3_client('transfer')
