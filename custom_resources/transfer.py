@@ -58,6 +58,7 @@ class User(LambdaBackedCustomResource):
                     "transfer:ImportSshPublicKey",
                     "transfer:List*",
                     "transfer:UpdateUser",
+                    "iam:PassRole"
                 ],
                 "Resource": "*",
             }],
