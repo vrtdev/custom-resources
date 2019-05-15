@@ -24,6 +24,8 @@ class S3Object(CloudFormationCustomResource):
         self.bucket = self.resource_properties['Bucket']
         self.key = self.resource_properties['Key']
         self.body = self.resource_properties.get('Body', '')
+        self.object_metadata = self.resource_properties.get('ObjectMetadata', {})
+        self.content_type = self.resource_properties.get('ContentType', 'binary/octet-stream')  # copy AWS default
 
         if not isinstance(self.body, str):
             self.body = json.dumps(self.body)
@@ -36,6 +38,8 @@ class S3Object(CloudFormationCustomResource):
             Bucket=self.bucket,
             Key=self.key,
             Body=self.body.encode('utf-8'),
+            Metadata=self.object_metadata,
+            ContentType=self.content_type,
         )
 
     def update(self):
