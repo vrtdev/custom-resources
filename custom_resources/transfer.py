@@ -28,6 +28,7 @@ class Server(LambdaBackedCustomResource):
                     "transfer:StopServer",
                     "transfer:TestIdentityProvider",
                     "transfer:UpdateServer",
+                    "iam:PassRole"
                 ],
                 "Resource": "*",
             }],
