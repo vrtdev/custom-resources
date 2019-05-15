@@ -47,11 +47,23 @@ class Server(CloudFormationCustomResource):
         if value is not None:
             params[key] = value
 
-    def build_params(self):
+    def build_create_params(self):
         required = {
             'EndpointType': self.endpoint_type,
             'IdentityProviderType': self.identity_provider_type
         }
+        self.add_if_not_none(required, 'EndpointDetails', self.endpoint_details)
+        self.add_if_not_none(required, 'IdentityProviderDetails', self.identity_provider_details)
+        self.add_if_not_none(required, 'HostKey', self.hostkey)
+        self.add_if_not_none(required, 'LoggingRole', self.logging_role)
+
+        return required
+
+    def build_update_params(self):
+        required = {
+            'ServerId': self.physical_resource_id
+        }
+        self.add_if_not_none(required, 'EndpointType', self.endpoint_details)
         self.add_if_not_none(required, 'EndpointDetails', self.endpoint_details)
         self.add_if_not_none(required, 'IdentityProviderDetails', self.identity_provider_details)
         self.add_if_not_none(required, 'HostKey', self.hostkey)
@@ -65,7 +77,7 @@ class Server(CloudFormationCustomResource):
     def create(self):
         transfer_client = self.get_boto3_client('transfer')
 
-        params = self.build_params()
+        params = self.build_create_params()
         response = transfer_client.create_server(**params)
         self.physical_resource_id = response['ServerId']
 
@@ -74,8 +86,7 @@ class Server(CloudFormationCustomResource):
     def update(self):
         transfer_client = self.get_boto3_client('transfer')
 
-        params = self.build_params()
-        params['ServerId'] = self.physical_resource_id
+        params = self.build_update_params()
         transfer_client.update_server(**params)
 
         return self.get_attributes()
