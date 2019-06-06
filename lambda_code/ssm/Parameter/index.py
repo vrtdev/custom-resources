@@ -33,8 +33,8 @@ class Parameter(CloudFormationCustomResource):
         Description: str: optional:
         Type: enum["String", "StringList", "SecureString"]: optional:
               default "String"
-        Value: str: required:
         KeyId: str: required if Type==SecureString
+        Value: str: required unless using RandomValue
         RandomValue: dict: optional:
             Set Value to a random string with these properties:
              - length: int: default=22
