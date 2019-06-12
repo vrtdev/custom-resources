@@ -79,7 +79,15 @@ class Parameter(CloudFormationCustomResource):
         self.return_value_hash = strtobool(self.resource_properties.get('ReturnValueHash', 'false'))
 
     def attributes(self):
-        attr = {}
+        ssm = self.get_boto3_client('ssm')
+        parameter = ssm.get_parameter(
+            Name=self.name,
+            WithDecryption=False,
+        )
+
+        attr = {
+            'Arn': parameter['Parameter']['ARN']
+        }
 
         if self.return_value:
             attr['Value'] = self.value
