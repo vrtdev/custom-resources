@@ -32,7 +32,6 @@ class Parameter(LambdaBackedCustomResource):
                 "Effect": "Allow",
                 "Action": [
                     "ssm:PutParameter",
-                    "ssm:GetParameter",
                     "ssm:GetParameters",
                     "ssm:DeleteParameter",
                     "ssm:AddTagsToResource",
