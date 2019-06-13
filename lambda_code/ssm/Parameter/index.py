@@ -11,7 +11,6 @@ from _metadata import CUSTOM_RESOURCE_NAME
 
 
 REGION = os.environ['AWS_REGION']
-ACCOUNT_ID = os.environ['AWS_ACCOUNT_ID']
 
 
 def generate_random(specs: dict) -> str:
@@ -80,8 +79,9 @@ class Parameter(CloudFormationCustomResource):
         self.return_value_hash = strtobool(self.resource_properties.get('ReturnValueHash', 'false'))
 
     def attributes(self):
+        account_id = self.context.invoked_function_arn.split(":")[4]
         attr = {
-            'Arn': 'arn:aws:ssm:{}:{}:parameter{}'.format(REGION, ACCOUNT_ID, self.name)
+            'Arn': 'arn:aws:ssm:{}:{}:parameter{}'.format(REGION, account_id, self.name)
         }
 
         if self.return_value:
