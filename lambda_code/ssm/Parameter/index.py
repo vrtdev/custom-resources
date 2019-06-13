@@ -79,7 +79,10 @@ class Parameter(CloudFormationCustomResource):
         self.return_value_hash = strtobool(self.resource_properties.get('ReturnValueHash', 'false'))
 
     def attributes(self):
-        attr = {}
+        account_id = self.context.invoked_function_arn.split(":")[4]
+        attr = {
+            'Arn': 'arn:aws:ssm:{}:{}:parameter{}'.format(REGION, account_id, self.name)
+        }
 
         if self.return_value:
             attr['Value'] = self.value
