@@ -3,8 +3,8 @@ from cfn_custom_resource import CloudFormationCustomResource
 
 class Tags(CloudFormationCustomResource):
     def validate(self):
-        self.environmentArn = self.resource_properties.get('EnvironmentArn')
-        self.tags = self.resource_properties.get('Tags')
+        self.environmentArn = self.resource_properties['EnvironmentArn']
+        self.tags = self.resource_properties['Tags']
 
     @staticmethod
     def tags_to_update(tags):
