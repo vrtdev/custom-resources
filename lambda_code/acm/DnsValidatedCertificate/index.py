@@ -19,7 +19,12 @@ class DomainValidationNotThere(Exception):
 
 def get_validation_records(describe_stack_response):
     result = {}
-    for domain_validation_options in describe_stack_response['Certificate']['DomainValidationOptions']:
+    certificate_description = describe_stack_response['Certificate']
+    # If there are no DomainValidationOptions available yet, "DomainValidationOptions" may be
+    # missing or not have a ResourceRecord. In both cases we raise an DomainValidationNotThere
+    if "DomainValidationOptions" not in certificate_description:
+        raise DomainValidationNotThere()
+    for domain_validation_options in certificate_description["DomainValidationOptions"]:
         try:
             result[domain_validation_options['ResourceRecord']['Name']] = \
                 domain_validation_options['ResourceRecord']['Value']
