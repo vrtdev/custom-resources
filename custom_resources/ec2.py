@@ -17,6 +17,12 @@ class FindAmi(LambdaBackedCustomResource):
     }
 
     @classmethod
+    def _update_lambda_settings(cls, settings):
+        # Although I don't understand why, this Lambda sometimes needs more than 3 seconds to run
+        settings['Timeout'] = 30
+        return settings
+
+    @classmethod
     def _lambda_policy(cls):
         return {
             "Version": "2012-10-17",

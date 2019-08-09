@@ -14,12 +14,15 @@ Parameters:
 
 import os
 import boto3
+import structlog
 
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
 
 
 REGION = os.environ['AWS_REGION']
+
+structlog.configure(processors=[structlog.processors.JSONRenderer()])
 
 
 def dict_element_copy_if_exists(
@@ -56,6 +59,7 @@ class FindAmi(CloudFormationCustomResource):
             return False
 
     def create(self):
+        structlog.get_logger().log("Handling request", filter=self.filter)
         ec2_client = boto3.client(  # Don't use self.get_boto3_client, since we may vary regions
             'ec2',
             region_name=self.resource_properties.get('Region', REGION),
@@ -68,9 +72,11 @@ class FindAmi(CloudFormationCustomResource):
                 'Values': [value],
             })
 
+        structlog.get_logger().log("Converted to AMI filter; doing API call", filter=ami_filter)
         ami_list = ec2_client.describe_images(
             Filters=ami_filter
         )
+        structlog.get_logger().log("API call done, sorting")
         sorted_ami_list = sorted(
             ami_list['Images'],
             key=lambda k: k.get('CreationDate', ''),
