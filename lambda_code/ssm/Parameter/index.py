@@ -29,7 +29,7 @@ def generate_random(specs: dict) -> str:
 class Parameter(CloudFormationCustomResource):
     """
     Properties:
-        Name: str: required: Name of the Parameter (including namespace)
+        Name: str: optional: Name of the Parameter (including namespace)
         Description: str: optional:
         Type: enum["String", "StringList", "SecureString"]: optional:
               default "String"
@@ -62,7 +62,12 @@ class Parameter(CloudFormationCustomResource):
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Name instead
 
     def validate(self):
-        self.name = self.resource_properties['Name']
+        self.name = self.resource_properties.get('Name')
+        if self.name is None:
+            self.name = self.generate_unique_id(
+                prefix="CFn-",
+                max_len=2048,
+            )
 
         self.description = self.resource_properties.get('Description', '')
         self.type = self.resource_properties.get('Type', 'String')
