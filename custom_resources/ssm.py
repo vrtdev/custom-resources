@@ -6,7 +6,7 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 class Parameter(LambdaBackedCustomResource):
     props = {
-        'Name': (string_types, True),
+        'Name': (string_types, False),
         'Type': (string_types, False),
         'Description': (string_types, False),
         'Value': (string_types, False),
