@@ -9,6 +9,8 @@ class NlbSourceIps(LambdaBackedCustomResource):
 
     Return Attributes:
         "IPv4Addresses": ["192.0.2.1", "192.0.2.2"]
+        "IPv4Address0": "192.0.2.1"
+        "IPv4Address1": "192.0.2.2"
     """
     props = {
         'LoadBalancerArn': (string_types, True),

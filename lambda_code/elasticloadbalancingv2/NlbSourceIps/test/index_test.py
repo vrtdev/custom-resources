@@ -201,3 +201,6 @@ def test_nlb_source_ips(nlb_arn_gen):
     returned_ips = attributes['IPv4Addresses']
     for ip in ips.values():
         assert ip in returned_ips
+
+    for i, ip in enumerate(returned_ips, start=0):
+        assert attributes[f"IPv4Address{i}"] in returned_ips

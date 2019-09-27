@@ -78,9 +78,14 @@ class NlbSourceIps(CloudFormationCustomResource):
                 for eni in enis
             ]
 
-        return {
-            'IPv4Addresses': sorted(list(ipv4_addresses)),
+        ipv4_addresses = sorted(list(ipv4_addresses))
+        attributes = {
+            'IPv4Addresses': ipv4_addresses,
         }
+        for i, ip in enumerate(ipv4_addresses):
+            attributes[f"IPv4Address{i}"] = ip
+
+        return attributes
 
     def update(self):
         return self.create()
