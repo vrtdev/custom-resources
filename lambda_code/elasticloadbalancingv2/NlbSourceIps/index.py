@@ -1,3 +1,4 @@
+import json
 import traceback
 
 import dns.resolver
@@ -57,9 +58,12 @@ class NlbSourceIps(CloudFormationCustomResource):
             str(rr)
             for rr in a_records
         }
+        print("Found IP addresses:")
+        for a in ipv4_addresses:
+            print(a)
 
         if nlb_scheme == 'internet-facing':
-            # resolve public IPs to internal IPs
+            print("NLB is internet-facing, resolving to internal IPs")
             ec2_client = self.get_boto3_client('ec2')
             # Paginator is also available, but use simple client. We are querying on Public IP,
             # so we expect at most a single answer, no pagination issues expected.
@@ -77,6 +81,9 @@ class NlbSourceIps(CloudFormationCustomResource):
                 eni['PrivateIpAddress']
                 for eni in enis
             ]
+            print("Found internal IP addresses:")
+            for a in ipv4_addresses:
+                print(a)
 
         ipv4_addresses = sorted(list(ipv4_addresses))
         attributes = {
@@ -85,6 +92,8 @@ class NlbSourceIps(CloudFormationCustomResource):
         for i, ip in enumerate(ipv4_addresses):
             attributes[f"IPv4Address{i}"] = ip
 
+        print("Returning attributes:")
+        print(json.dumps(attributes))
         return attributes
 
     def update(self):
