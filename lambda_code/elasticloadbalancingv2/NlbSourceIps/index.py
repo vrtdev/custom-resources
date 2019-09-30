@@ -50,6 +50,7 @@ class NlbSourceIps(CloudFormationCustomResource):
             eni
             for eni in enis
             if eni["InterfaceType"] == "network_load_balancer"
+            and eni["Attachment"]["InstanceOwnerId"] == "amazon-aws"
         ]
         print(f"Found {len(enis)} ENIs of type network_load_balancer")
 
