@@ -158,21 +158,12 @@ def describe_network_interfaces(
 
 
 def test_nlb_source_ips(nlb_arn_gen):
-    nlb_arn = nlb_arn_gen()
+    name = "test-nlb"
+    hex_id = "12345678"
+    nlb_arn = nlb_arn_gen(name=name, hex_id=hex_id)
 
     o = index.NlbSourceIps()
     o.nlb_arn = nlb_arn
-
-    describe_lb = describe_load_balancers(
-        arn=nlb_arn,
-        scheme='internet-facing',
-    )
-    dns_name = describe_lb['LoadBalancers'][0]['DNSName']
-
-    describe_load_balancers_mock = mock.Mock(return_value=describe_lb)
-    elbv2_client = mock.Mock(describe_load_balancers=describe_load_balancers_mock)
-
-    o.BOTO3_CLIENTS['elbv2'] = elbv2_client
 
     ips = {
         '198.51.100.10': '192.0.2.1',
@@ -183,20 +174,16 @@ def test_nlb_source_ips(nlb_arn_gen):
         filters = kwargs.pop('Filters')
         assert len(kwargs) == 0
         assert len(filters) == 1
-        assert filters[0]['Name'] == 'addresses.association.public-ip'
+        assert filters[0]['Name'] == 'description'
+        assert filters[0]['Values'] == [f"ELB net/{name}/{hex_id}"]
         return describe_network_interfaces({
             k: v
             for k, v in ips.items()
-            if k in filters[0]['Values']
         })
     ec2_client = mock.Mock(describe_network_interfaces=describe_eni)
     o.BOTO3_CLIENTS['ec2'] = ec2_client
 
-    with mock.patch('dns.resolver.query', return_value=ips.keys()) as resolve:
-        attributes = o.create()
-
-    describe_load_balancers_mock.assert_called_once_with(LoadBalancerArns=[nlb_arn])
-    resolve.assert_called_with(dns_name, rdtype=dns.rdatatype.A)
+    attributes = o.create()
 
     returned_ips = attributes['IPv4Addresses']
     for ip in ips.values():
