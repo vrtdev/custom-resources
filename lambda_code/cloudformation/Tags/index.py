@@ -60,6 +60,10 @@ class Tags(CloudFormationCustomResource):
             {'Key': k, 'Value': v}
             for k, v in tags_dict.items()
         ]
+
+        print("Returning Attributes:")
+        print(json.dumps(attrs))
+
         return attrs
 
     def update(self):
