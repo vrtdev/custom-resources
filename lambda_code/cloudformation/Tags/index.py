@@ -54,13 +54,13 @@ class Tags(CloudFormationCustomResource):
         print("Tags after Omit/Set:")
         print(json.dumps(tags_dict))
 
-        return {
-            'TagDict': tags_dict,
-            'TagList': [
-                {'Key': k, 'Value': v}
-                for k, v in tags_dict.items()
-            ],
-        }
+        attrs = tags_dict
+        attrs['TagDict'] = tags_dict,
+        attrs['TagList'] = [
+            {'Key': k, 'Value': v}
+            for k, v in tags_dict.items()
+        ]
+        return attrs
 
     def update(self):
         return self.create()
