@@ -55,7 +55,7 @@ class Tags(CloudFormationCustomResource):
         print(json.dumps(tags_dict))
 
         attrs = tags_dict.copy()
-        attrs['TagDict'] = tags_dict.copy(),
+        attrs['TagDict'] = tags_dict.copy()
         attrs['TagList'] = [
             {'Key': k, 'Value': v}
             for k, v in tags_dict.items()
