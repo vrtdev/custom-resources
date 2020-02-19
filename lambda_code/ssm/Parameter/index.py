@@ -180,7 +180,8 @@ class Parameter(CloudFormationCustomResource):
                     "Can't perform requested update: Would need to overwrite previous RandomValue, "
                     "but RandomValue should not be changed")
 
-        self.put_parameter(overwrite=True)
+        if need_put:
+            self.put_parameter(overwrite=True)
 
         if self.has_property_changed('Tags'):
             self.update_tags(self.tags, self.old_resource_properties.get('Tags', []))
