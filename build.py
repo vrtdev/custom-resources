@@ -8,6 +8,7 @@ be deployed.
 """
 import os
 import importlib
+import subprocess
 import sys
 
 import argparse
@@ -149,6 +150,13 @@ def defined_custom_resources(lambda_dir: str, class_dir: str) -> typing.Set[Cust
     return custom_resources
 
 
+def run_pip(*args):
+    subprocess.run(
+        ['pip', *args],
+        check=True,
+    )
+
+
 def create_zip_file(custom_resource: CustomResource, output_dir: str):
     dot_joined_resource_name = '.'.join(custom_resource.name)
 
@@ -177,7 +185,7 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
         if requirements_file is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
             entries.remove(requirements_file)
-            pipmain(['install', '-r', requirements_file.path, '-t', pip_dir])
+            run_pip('install', '-r', requirements_file.path, '-t', pip_dir)
 
         if test_file is not None:
             entries.remove(test_file)
