@@ -185,7 +185,11 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
         if requirements_file is not None:
             # `requirements.txt` found. Interpret it, and add the result to the zip file
             entries.remove(requirements_file)
-            run_pip('install', '-r', requirements_file.path, '-t', pip_dir)
+            run_pip('install',
+                    '-r', requirements_file.path,
+                    '--isolated',  # Don't automatically add --user (which breaks --target below)
+                                   # --user is on by default on (at least) Debian Buster
+                    '--target', pip_dir)
 
         if test_file is not None:
             entries.remove(test_file)
