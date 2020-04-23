@@ -7,8 +7,11 @@ import typing
 from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
-from _metadata import CUSTOM_RESOURCE_NAME
 
+try:
+    from _metadata import CUSTOM_RESOURCE_NAME
+except ImportError:
+    CUSTOM_RESOURCE_NAME = 'dummy'
 
 REGION = os.environ['AWS_REGION']
 
@@ -164,25 +167,35 @@ class Parameter(CloudFormationCustomResource):
         return self.put_parameter(overwrite=False)
 
     def update(self):
+        can_put = (not self.random_value) or \
+                  (self.random_value and self.has_property_changed('RandomValue'))
+
+        need_put = self.has_property_changed('Name') or \
+            self.has_property_changed('Description') or \
+            self.has_property_changed('Type') or \
+            self.has_property_changed('KeyId') or \
+            self.has_property_changed('Value') or \
+            self.has_property_changed('RandomValue')
+
+        need_get = self.return_value or self.return_value_hash
+
+        if (need_put or need_get) and not can_put:
+            # We need to maintain the previously generated Value
+            # We are very limited in the updates we can perform
+            raise RuntimeError(
+                "Can't perform requested update: Would need to overwrite previous RandomValue, "
+                "but RandomValue should not be changed")
+
         if self.has_property_changed('Name'):
             return self.create()
             # Old one will be deleted by CloudFormation
 
-        need_put = self.has_property_changed('Description') or \
-            self.has_property_changed('Type') or \
-            self.has_property_changed('KeyId')
-
-        if self.random_value and not self.has_property_changed('RandomValue'):
-            # We need to maintain the previously generated Value
-            # We are very limited in the updates we can perform
-            if need_put:
-                raise RuntimeError(
-                    "Can't perform requested update: Would need to overwrite previous RandomValue, "
-                    "but RandomValue should not be changed")
-
-        self.put_parameter(overwrite=True)
+        if need_put:
+            print("Updating parameter")
+            self.put_parameter(overwrite=True)
 
         if self.has_property_changed('Tags'):
+            print("Updating tags")
             self.update_tags(self.tags, self.old_resource_properties.get('Tags', []))
 
         return self.attributes()
