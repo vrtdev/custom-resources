@@ -127,7 +127,8 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
         return attributes
 
     def update(self):
-        if self.has_property_changed('DomainName') or \
+        if self.has_property_changed('Region') or \
+                self.has_property_changed('DomainName') or \
                 self.has_property_changed('SubjectAlternativeNames'):
             return self.create()
             # CloudFormation will call delete() on the old resource
