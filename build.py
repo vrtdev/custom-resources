@@ -263,9 +263,7 @@ for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir)
     ))
     template.add_resource(logs.LogGroup(
         "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name_cfn),
-        LogGroupName=Sub("/aws/lambda/{custom_resource_name}-${{AWS::StackName}}".format(
-            custom_resource_name='.'.join(custom_resource.name)
-        )),
+        LogGroupName=troposphere.Join('', ["/aws/lambda/", troposphere.Ref(awslambdafunction)]),
         RetentionInDays=90,
     ))
     template.add_output(Output(
