@@ -8,7 +8,8 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 class UserPoolClient(LambdaBackedCustomResource):
     """
-    Added support for configuring the Cognito Client User Pool.
+    Similar to the built-in UserPoolClient, but supports the ClientSecret attribute.
+    The built-in resource does not; tested 2020-06-29.
     """
 
     props = {
@@ -69,6 +70,8 @@ class UserPoolDomain(LambdaBackedCustomResource):
     """
     Added support for configuring the Cognito Client User Domain.
     """
+    _deprecated = 1593424818
+    _deprecated_message = 'cognito.UserPoolDomain is now natively supported by CloudFormation'
 
     props = {
         'UserPoolId': (string_types, True),
@@ -110,6 +113,9 @@ class UserPoolDomain(LambdaBackedCustomResource):
 
 
 class UserPoolIdentityProvider(LambdaBackedCustomResource):
+    _deprecated = 1593424818
+    _deprecated_message = 'cognito.UserPoolIdentityProvider is now natively supported by CloudFormation'
+
     props = {
         'UserPoolId': (string_types, True),
         'ProviderName': (string_types, True),
