@@ -5,6 +5,7 @@ https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutReso
 https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DeleteResourcePolicy.html
 """
 
+import json
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
 
@@ -17,7 +18,7 @@ class ResourcePolicy(CloudFormationCustomResource):
 
     def create(self):
         cl = self.get_boto3_client('logs')
-        cl.put_resource_policy(policyName=self.physical_resource_id, policyDocument=self.policy_doc)
+        cl.put_resource_policy(policyName=self.physical_resource_id, policyDocument=json.dumps(self.policy_doc))
         return {}
 
     def update(self):
