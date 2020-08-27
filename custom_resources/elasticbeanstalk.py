@@ -26,12 +26,10 @@ class SolutionStackName(LambdaBackedCustomResource):
         }
 
 
-class Tags(LambdaBackedCustomResource):
-    """Custom resource to update beanstalk environment tags.
-    Dirty hack because CloudFormation does not allow this by default."""
+class EnvironmentResources(LambdaBackedCustomResource):
     props = {
-        'Tags': (dict, True),
-        'EnvironmentArn': (string_types, True),
+        'EnvironmentId': (string_types, True),  # Ref(eb_environment)
+        'Serial': (string_types, False),  # Use this to force an update
     }
 
     @classmethod
@@ -40,10 +38,7 @@ class Tags(LambdaBackedCustomResource):
             "Version": "2012-10-17",
             "Statement": [{
                 "Effect": "Allow",
-                "Action": [
-                    "elasticbeanstalk:ListTagsForResource",
-                    "elasticbeanstalk:UpdateTagsForResource",
-                ],
+                "Action": "elasticbeanstalk:Describe*",
                 "Resource": "*",
             }],
         }
