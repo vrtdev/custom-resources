@@ -128,10 +128,19 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
 
     def update(self):
         if self.has_property_changed('Region') or \
-                self.has_property_changed('DomainName') or \
-                self.has_property_changed('SubjectAlternativeNames'):
+                self.has_property_changed('DomainName'):
             return self.create()
             # CloudFormation will call delete() on the old resource
+        if self.has_property_changed('SubjectAlternativeNames'):
+            # If we can consider both empty, the SANs did not change. However,
+            # they're represented differently in CloudFormation,
+            # We consider everything that's falsy as empty ([] and None both are)
+            old_san_truthy = bool(self.old_resource_properties.get('SubjectAlternativeNames'))
+            new_san_truthy = bool(self.resource_properties.get('SubjectAlternativeNames'))
+            if old_san_truthy or new_san_truthy:
+                # at least one is not falsy / not empty
+                return self.create()
+                # CloudFormation will call delete() on the old resource
 
         self.update_tags(
             new_tags=self.tags,
