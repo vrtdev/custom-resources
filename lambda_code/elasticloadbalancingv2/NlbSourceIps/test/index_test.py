@@ -1,7 +1,6 @@
 import datetime
 import typing
 
-import dns
 import pytest
 import mock
 from dateutil.tz import tzutc
