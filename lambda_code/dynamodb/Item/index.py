@@ -12,7 +12,10 @@ import os
 from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
-from _metadata import CUSTOM_RESOURCE_NAME
+try:
+    from _metadata import CUSTOM_RESOURCE_NAME
+except ImportError:
+    CUSTOM_RESOURCE_NAME = 'dummy'
 
 NOT_CREATED = "NOT CREATED"
 
@@ -43,6 +46,23 @@ class Item(CloudFormationCustomResource):
         item = {}
         item.update(self.item_key)
         item.update(self.item_value)
+
+        # Do the needed conversions. CloudFormation given all str's
+        def do_convert(item):
+            if 'BOOL' in item:
+                return {'BOOL': (item['BOOL'] == 'true')}
+            elif 'L' in item:
+                for i, sub_item in enumerate(item['L']):
+                    item['L'][i] = do_convert(sub_item)
+                return item
+            elif 'M' in item:
+                for k, v in item['M'].items():
+                    item['M'][k] = do_convert(v)
+                return item
+            else:
+                return item
+        do_convert({'M': item})
+
         return item
 
     def construct_physical_id(self):
