@@ -2,6 +2,7 @@
 # wraps around http://boto3.readthedocs.io/en/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.create_user_pool_client
 
 from six import string_types
+from troposphere.cognito import TokenValidityUnits
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
@@ -29,7 +30,7 @@ class UserPoolClient(LambdaBackedCustomResource):
         'RefreshTokenValidity': (int, False),
         'AccessTokenValidity': (int, False),
         'IdTokenValidity': (int, False),
-        'TokenValidityUnits': (dict, False),
+        'TokenValidityUnits': (TokenValidityUnits, False),
     }
 
 
