@@ -33,7 +33,6 @@ class UserPoolClient(CloudFormationCustomResource):
             self.user_pool_id = self.resource_properties['UserPoolId']
             """Optional"""
             self.generate_secret = convertToBool(self.resource_properties.get('GenerateSecret', None))
-            self.refresh_token_validity = self.resource_properties.get('RefreshTokenValidity', None)
             self.supported_identity_providers = self.resource_properties.get('SupportedIdentityProviders', None)
             self.logout_urls = self.resource_properties.get('LogoutURLs', None)
             self.callback_urls = self.resource_properties.get('CallbackURLs', None)
@@ -45,6 +44,10 @@ class UserPoolClient(CloudFormationCustomResource):
             self.allowed_oauth_flows_user_pool_client = convertToBool(
                 self.resource_properties.get('AllowedOAuthFlowsUserPoolClient', None))
             self.explicit_auth_flows = self.resource_properties.get('ExplicitAuthFlows', None)
+            self.refresh_token_validity = self.resource_properties.get('RefreshTokenValidity', None)
+            self.access_token_validity = self.resource_properties.get('AccessTokenValidity', None)
+            self.id_token_validity = self.resource_properties.get('IdTokenValidity', None)
+            self.token_validity_units = self.resource_properties.get('TokenValidityUnits', None)
 
             return True
 
@@ -52,15 +55,25 @@ class UserPoolClient(CloudFormationCustomResource):
             return False
 
     def create(self):
-        params = {'UserPoolId': self.user_pool_id, 'ClientName': self.client_name,
-                       'GenerateSecret': self.generate_secret,
-                       'RefreshTokenValidity': self.refresh_token_validity, 'ReadAttributes': self.read_attributes,
-                       'WriteAttributes': self.write_attributes, 'ExplicitAuthFlows': self.explicit_auth_flows,
-                       'SupportedIdentityProviders': self.supported_identity_providers,
-                       'CallbackURLs': self.callback_urls,
-                       'LogoutURLs': self.logout_urls, 'DefaultRedirectURI': self.default_redirect_uri,
-                       'AllowedOAuthFlows': self.allowed_oauth_flows, 'AllowedOAuthScopes': self.allowed_oauth_scopes,
-                       'AllowedOAuthFlowsUserPoolClient': self.allowed_oauth_flows_user_pool_client}
+        params = {
+            'UserPoolId': self.user_pool_id,
+            'ClientName': self.client_name,
+            'GenerateSecret': self.generate_secret,
+            'ReadAttributes': self.read_attributes,
+            'WriteAttributes': self.write_attributes,
+            'ExplicitAuthFlows': self.explicit_auth_flows,
+            'SupportedIdentityProviders': self.supported_identity_providers,
+            'CallbackURLs': self.callback_urls,
+            'LogoutURLs': self.logout_urls,
+            'DefaultRedirectURI': self.default_redirect_uri,
+            'AllowedOAuthFlows': self.allowed_oauth_flows,
+            'AllowedOAuthScopes': self.allowed_oauth_scopes,
+            'AllowedOAuthFlowsUserPoolClient': self.allowed_oauth_flows_user_pool_client,
+            'RefreshTokenValidity': self.refresh_token_validity,
+            'AccessTokenValidity': self.access_token_validity,
+            'IdTokenValidity': self.id_token_validity,
+            'TokenValidityUnits': self.token_validity_units,
+        }
         # Remove all params that are None
         params = {k: v for k, v in params.items() if v is not None}
 
@@ -79,14 +92,24 @@ class UserPoolClient(CloudFormationCustomResource):
             # We need a new GlobalTable, switch to create and let CLEANUP delete the old one
             raise ValueError("Change of GenerateSecret is not supported for update, please delete and recreate your client")
 
-        params = {'UserPoolId': self.user_pool_id, 'ClientName': self.client_name,
-                       'RefreshTokenValidity': self.refresh_token_validity, 'ReadAttributes': self.read_attributes,
-                       'WriteAttributes': self.write_attributes, 'ExplicitAuthFlows': self.explicit_auth_flows,
-                       'SupportedIdentityProviders': self.supported_identity_providers,
-                       'CallbackURLs': self.callback_urls,
-                       'LogoutURLs': self.logout_urls, 'DefaultRedirectURI': self.default_redirect_uri,
-                       'AllowedOAuthFlows': self.allowed_oauth_flows, 'AllowedOAuthScopes': self.allowed_oauth_scopes,
-                       'AllowedOAuthFlowsUserPoolClient': self.allowed_oauth_flows_user_pool_client}
+        params = {
+            'UserPoolId': self.user_pool_id,
+            'ClientName': self.client_name,
+            'ReadAttributes': self.read_attributes,
+            'WriteAttributes': self.write_attributes,
+            'ExplicitAuthFlows': self.explicit_auth_flows,
+            'SupportedIdentityProviders': self.supported_identity_providers,
+            'CallbackURLs': self.callback_urls,
+            'LogoutURLs': self.logout_urls,
+            'DefaultRedirectURI': self.default_redirect_uri,
+            'AllowedOAuthFlows': self.allowed_oauth_flows,
+            'AllowedOAuthScopes': self.allowed_oauth_scopes,
+            'AllowedOAuthFlowsUserPoolClient': self.allowed_oauth_flows_user_pool_client,
+            'RefreshTokenValidity': self.refresh_token_validity,
+            'AccessTokenValidity': self.access_token_validity,
+            'IdTokenValidity': self.id_token_validity,
+            'TokenValidityUnits': self.token_validity_units,
+        }
         # Remove all params that are None
         params = {k: v for k, v in params.items() if v is not None}
 
@@ -94,7 +117,7 @@ class UserPoolClient(CloudFormationCustomResource):
 
         response = boto_client.update_user_pool_client(ClientId=self.physical_resource_id,
                                                        **params
-                                                       )
+                                                        )
         return {
             'ClientSecret': response["UserPoolClient"].get('ClientSecret', ''),
         }

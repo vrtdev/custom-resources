@@ -16,7 +16,6 @@ class UserPoolClient(LambdaBackedCustomResource):
         'ClientName': (string_types, True),
         'UserPoolId': (string_types, True),
         'GenerateSecret': (bool, False),
-        'RefreshTokenValidity': (int, False),
         'SupportedIdentityProviders': ([string_types], False),
         'ExplicitAuthFlows': ([string_types], False),
         'LogoutURLs': ([string_types], False),
@@ -27,6 +26,10 @@ class UserPoolClient(LambdaBackedCustomResource):
         'AllowedOAuthFlows': ([string_types], False),
         'AllowedOAuthScopes': ([string_types], False),
         'AllowedOAuthFlowsUserPoolClient': (bool, False),
+        'RefreshTokenValidity': (int, False),
+        'AccessTokenValidity': (int, False),
+        'IdTokenValidity': (int, False),
+        'TokenValidityUnits': (dict, False),
     }
 
 
