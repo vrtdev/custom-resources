@@ -22,6 +22,9 @@ def convertToBool(input):
         return input
 
 
+def int_or_none(value):
+    return None if value is None else int(value)
+
 class UserPoolClient(CloudFormationCustomResource):
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Client Pool Id instead
@@ -44,9 +47,9 @@ class UserPoolClient(CloudFormationCustomResource):
             self.allowed_oauth_flows_user_pool_client = convertToBool(
                 self.resource_properties.get('AllowedOAuthFlowsUserPoolClient', None))
             self.explicit_auth_flows = self.resource_properties.get('ExplicitAuthFlows', None)
-            self.refresh_token_validity = self.resource_properties.get('RefreshTokenValidity', None)
-            self.access_token_validity = self.resource_properties.get('AccessTokenValidity', None)
-            self.id_token_validity = self.resource_properties.get('IdTokenValidity', None)
+            self.refresh_token_validity = int_or_none(self.resource_properties.get('RefreshTokenValidity', None))
+            self.access_token_validity = int_or_none(self.resource_properties.get('AccessTokenValidity', None))
+            self.id_token_validity = int_or_none(self.resource_properties.get('IdTokenValidity', None))
             self.token_validity_units = self.resource_properties.get('TokenValidityUnits', None)
 
             return True
