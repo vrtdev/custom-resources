@@ -33,6 +33,14 @@ def get_validation_records(describe_stack_response):
     return json.dumps(result)
 
 
+def add_or_replace_tag(tags: list, key: str, value: str) -> None:
+    for tag in tags:
+        if tag['Key'] == key:
+            tag['Value'] = value
+            return
+    tags.append({'Key': key, 'Value': value})
+
+
 class DnsValidatedCertificate(CloudFormationCustomResource):
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use version ARN instead
@@ -43,6 +51,8 @@ class DnsValidatedCertificate(CloudFormationCustomResource):
         self.subject_alternative_names = self.resource_properties.get(
             'SubjectAlternativeNames', None)
         self.tags = self.resource_properties.get('Tags', [])
+
+        add_or_replace_tag(self.tags, "cr:cloudformation:stack-id", self.stack_id)
 
         # strip trailing dots
         if self.domain_name.endswith('.'):
