@@ -48,3 +48,24 @@ The following (relative) paths are treated specially:
 
    - CUSTOM_RESOURCE_NAME: the custom resource name as will be used by depending
      templates. E.g. "Service@Foobar" for "Custom::Service@Foobar" resources.
+
+### Step-by-Step instructions
+You can also 
+Assumptions:
+- You're working in a virtualenv
+- You have an S3 bucket to save the zip files in. We use `$S3_BUCKET` and `$S3_PATH` (should end in `/`)in the script below
+- You are using the right profile or environemnt variables to have credentials for the `aws` command
+
+```shell
+# install requirements and build
+pip install -r requirements.txt --upgrade
+python build.py
+
+# Upload the outputs
+S3_BUCKET='a-bucket'
+S3_PATH="custom-resources-$(date '+%s')"
+aws s3 sync output/ s3://$S3_BUCKET/$S3_PATH
+echo "uploaded to s3://$S3_BUCKET/$S3_PATH"
+
+# Deploy the cloudformation template in output/cfn.json
+```
