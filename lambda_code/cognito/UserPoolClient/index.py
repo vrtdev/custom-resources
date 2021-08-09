@@ -25,6 +25,7 @@ def convertToBool(input):
 def int_or_none(value):
     return None if value is None else int(value)
 
+
 class UserPoolClient(CloudFormationCustomResource):
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Client Pool Id instead
@@ -45,7 +46,8 @@ class UserPoolClient(CloudFormationCustomResource):
             self.allowed_oauth_flows = self.resource_properties.get('AllowedOAuthFlows', None)
             self.allowed_oauth_scopes = self.resource_properties.get('AllowedOAuthScopes', None)
             self.allowed_oauth_flows_user_pool_client = convertToBool(
-                self.resource_properties.get('AllowedOAuthFlowsUserPoolClient', None))
+                self.resource_properties.get('AllowedOAuthFlowsUserPoolClient', None)
+            )
             self.explicit_auth_flows = self.resource_properties.get('ExplicitAuthFlows', None)
             self.refresh_token_validity = int_or_none(self.resource_properties.get('RefreshTokenValidity', None))
             self.access_token_validity = int_or_none(self.resource_properties.get('AccessTokenValidity', None))
@@ -93,7 +95,9 @@ class UserPoolClient(CloudFormationCustomResource):
     def update(self):
         if self.has_property_changed('GenerateSecret'):
             # We need a new GlobalTable, switch to create and let CLEANUP delete the old one
-            raise ValueError("Change of GenerateSecret is not supported for update, please delete and recreate your client")
+            raise ValueError(
+                "Change of GenerateSecret is not supported for update, please delete and recreate your client"
+            )
 
         params = {
             'UserPoolId': self.user_pool_id,
@@ -118,9 +122,7 @@ class UserPoolClient(CloudFormationCustomResource):
 
         boto_client = self.get_boto3_client('cognito-idp')
 
-        response = boto_client.update_user_pool_client(ClientId=self.physical_resource_id,
-                                                       **params
-                                                        )
+        response = boto_client.update_user_pool_client(ClientId=self.physical_resource_id, **params)
         return {
             'ClientSecret': response["UserPoolClient"].get('ClientSecret', ''),
         }
@@ -128,8 +130,7 @@ class UserPoolClient(CloudFormationCustomResource):
     def delete(self):
         boto_client = self.get_boto3_client('cognito-idp')
         try:
-            boto_client.delete_user_pool_client(UserPoolId=self.user_pool_id,
-                                                ClientId=self.physical_resource_id)
+            boto_client.delete_user_pool_client(UserPoolId=self.user_pool_id, ClientId=self.physical_resource_id)
         except boto_client.exceptions.ClientException:
             # Assume delete was successful
             pass
