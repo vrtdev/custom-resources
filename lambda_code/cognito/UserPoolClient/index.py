@@ -131,7 +131,10 @@ class UserPoolClient(CloudFormationCustomResource):
         boto_client = self.get_boto3_client('cognito-idp')
         try:
             boto_client.delete_user_pool_client(UserPoolId=self.user_pool_id, ClientId=self.physical_resource_id)
-        except boto_client.exceptions.ClientException:
+        except (
+            boto_client.exceptions.ResourceNotFoundException,
+            boto_client.exceptions.InvalidParameterException,
+        ):
             # Assume delete was successful
             pass
 
