@@ -22,10 +22,10 @@ except ImportError:
     from pip._internal import main as pipmain  # pip 10
 
 import troposphere
-from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants
+from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants, Ref, Not, Equals, Join, ec2
 from custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
 
-parser = argparse.ArgumentParser(description='Build custom resources CloudForamtion template')
+parser = argparse.ArgumentParser(description='Build custom resources CloudFormation template')
 parser.add_argument('--class-dir', help='Where to look for the CustomResource classes',
                     default='custom_resources')
 parser.add_argument('--lambda-dir', help='Where to look for defined Lambda functions',
@@ -54,6 +54,18 @@ s3_path = template.add_parameter(troposphere.Parameter(
 ))
 template.set_parameter_label(s3_path, "S3 path")
 template.add_parameter_to_group(s3_path, lambda_code_location)
+
+vpc_subnets = template.add_parameter(troposphere.Parameter(
+    "VpcSubnets",
+    # Type cannot be a list of subnets ids if we want them to also support being empty
+    Type=constants.COMMA_DELIMITED_LIST,
+    Default="",
+    Description="(optional) VPC subnets for Custom Resources that run attached to a VPC"
+))
+template.set_parameter_label(vpc_subnets, "VPC Subnets")
+vpc_settings = template.add_parameter_to_group(vpc_subnets, "VPC Settings")
+
+has_vpc_subnets = template.add_condition("HasVpcSubnets", Not(Equals(Join("", Ref(vpc_subnets)), "")))
 
 
 def rec_split_path(path: str) -> typing.List[str]:
@@ -248,9 +260,38 @@ for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir)
 
     zip_filename = create_zip_file(custom_resource, args.output_dir)
 
+    function_settings = custom_resource.troposphere_class.function_settings()
+    needs_vpc = False
+    created_aws_objects: list[troposphere.BaseAWSObject] = []
+    if "VpcConfig" in function_settings:
+        needs_vpc = True
+        security_group = template.add_resource(ec2.SecurityGroup(
+            "{custom_resource_name}SecurityGroup".format(custom_resource_name=custom_resource_name_cfn),
+            GroupDescription="Security Group for the {custom_resource_name} custom resource".format(
+                custom_resource_name='.'.join(custom_resource.name)
+            ),
+        ))
+        created_aws_objects.append(security_group)
+        created_aws_objects.append(template.add_output(Output(
+            "{custom_resource_name}SecurityGroup".format(custom_resource_name=custom_resource_name_cfn),
+            Value=Ref(security_group),
+            Description="Security Group used by the {custom_resource_name} custom resource".format(
+                custom_resource_name='.'.join(custom_resource.name)
+            ),
+            Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}SecurityGroup".format(
+                custom_resource_name=custom_resource_name_cfn,
+            ))),
+        )))
+
+        function_settings["VpcConfig"] = awslambda.VPCConfig(
+            SecurityGroupIds=[Ref(security_group)],
+            SubnetIds=Ref(vpc_subnets)
+        )
+
     role = template.add_resource(custom_resource.troposphere_class.lambda_role(
         "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
     ))
+    created_aws_objects.append(role)
     awslambdafunction = template.add_resource(awslambda.Function(
         "{custom_resource_name}Function".format(custom_resource_name=custom_resource_name_cfn),
         Code=awslambda.Code(
@@ -259,14 +300,15 @@ for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir)
                                         zip_filename]),
         ),
         Role=GetAtt(role, 'Arn'),
-        **custom_resource.troposphere_class.function_settings()
+        **function_settings
     ))
-    template.add_resource(logs.LogGroup(
+    created_aws_objects.append(awslambdafunction)
+    created_aws_objects.append(template.add_resource(logs.LogGroup(
         "{custom_resource_name}Logs".format(custom_resource_name=custom_resource_name_cfn),
         LogGroupName=troposphere.Join('', ["/aws/lambda/", troposphere.Ref(awslambdafunction)]),
         RetentionInDays=90,
-    ))
-    template.add_output(Output(
+    )))
+    created_aws_objects.append(template.add_output(Output(
         "{custom_resource_name}ServiceToken".format(custom_resource_name=custom_resource_name_cfn),
         Value=GetAtt(awslambdafunction, 'Arn'),
         Description="ServiceToken for the {custom_resource_name} custom resource".format(
@@ -275,8 +317,8 @@ for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir)
         Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}ServiceToken".format(
             custom_resource_name=custom_resource_name_cfn
         )))
-    ))
-    template.add_output(Output(
+    )))
+    created_aws_objects.append(template.add_output(Output(
         "{custom_resource_name}Role".format(custom_resource_name=custom_resource_name_cfn),
         Value=GetAtt(role, 'Arn'),
         Description="Role used by the {custom_resource_name} custom resource".format(
@@ -285,7 +327,12 @@ for custom_resource in defined_custom_resources(args.lambda_dir, args.class_dir)
         Export=Export(Sub("${{AWS::StackName}}-{custom_resource_name}Role".format(
             custom_resource_name=custom_resource_name_cfn,
         ))),
-    ))
+    )))
+    if needs_vpc:
+        for aws_object in created_aws_objects:
+            if aws_object.resource.get('Condition'):
+                raise ValueError("Can't handle multiple conditions")
+            aws_object.Condition = has_vpc_subnets
 
 with open(os.path.join(args.output_dir, 'cfn.json'), 'w') as f:
     f.write(template.to_json())
