@@ -33,7 +33,7 @@ the custom resource. The code corresponding to a class `Resource` in the module
 Building
 --------
 
-The build script gathers all custom resources in a single (generated)
+The build script (`build.py`) gathers all custom resources in a single (generated)
 CloudFormation template. Each resource inside `lambda_code` is zipped.
 The following (relative) paths are treated specially:
 
