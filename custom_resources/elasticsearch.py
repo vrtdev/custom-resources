@@ -16,7 +16,10 @@ class IngestPipelineViaVpc(LambdaBackedCustomResource):
             "Version": "2012-10-17",
             "Statement": [{
                 "Effect": "Allow",
-                "Action": "es:ESHttp*",
+                "Action": [
+                    "es:ESHttpPut",
+                    "es:ESHttpDelete",
+                ],
                 "Resource": "*",
             }],
         }
