@@ -3,12 +3,17 @@ Custom resource to create an ingest pipeline in your AWS Elasticsearch Cluster.
 """
 
 import json
-import requests
+import os
+
 from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
 
+from elasticsearch import Elasticsearch, RequestsHttpConnection, ElasticsearchException
+from requests_aws4auth import AWS4Auth
 
-class IngestPipeline(CloudFormationCustomResource):
+REGION = os.environ['AWS_REGION']
+
+class IngestPipelineViaVpc(CloudFormationCustomResource):
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
 
     def validate(self):
@@ -17,22 +22,42 @@ class IngestPipeline(CloudFormationCustomResource):
         self.ingest_doc = self.resource_properties['IngestDocument']
 
     def create(self):
-        url = 'https://' + self.es_host + '/_ingest/pipeline/' + self.pipeline_name
-        requests.put(url, json.dumps(self.ingest_doc))
+        service = 'es'
+        credentials = self.get_boto3_session().get_credentials()
+        awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, REGION, service, session_token=credentials.token)
+
+        es = Elasticsearch(
+            hosts = [{'host': self.es_host, 'port': 443}],
+            http_auth = awsauth,
+            use_ssl = True,
+            verify_certs = True,
+            connection_class = RequestsHttpConnection
+        )
+
+        es.ingest.put_pipeline(id=self.pipeline_name, body=json.dumps(self.ingest_doc))
         return {}
 
     def update(self):
         return self.create()
 
     def delete(self):
-        url = 'https://' + self.es_host + '/_ingest/pipeline/' + self.pipeline_name
+        service = 'es'
+        credentials = self.get_boto3_session().get_credentials()
+        awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, REGION, service, session_token=credentials.token)
+
+        es = Elasticsearch(
+            hosts = [{'host': self.es_host, 'port': 443}],
+            http_auth = awsauth,
+            use_ssl = True,
+            verify_certs = True,
+            connection_class = RequestsHttpConnection
+        )
+
         try:
-            requests.delete(url)
-        except (requests.exceptions.Timeout,
-                requests.exceptions.TooManyRedirects,
-                requests.exceptions.RequestException):
+            es.ingest.delete_pipeline(id=self.pipeline_name)
+        except ElasticsearchException:
             # Assume already deleted
             pass
 
 
-handler = IngestPipeline.get_handler()
+handler = IngestPipelineViaVpc.get_handler()
