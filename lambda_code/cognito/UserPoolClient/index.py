@@ -94,10 +94,14 @@ class UserPoolClient(CloudFormationCustomResource):
 
     def update(self):
         if self.has_property_changed('GenerateSecret'):
-            # We need a new GlobalTable, switch to create and let CLEANUP delete the old one
             raise ValueError(
                 "Change of GenerateSecret is not supported for update, please delete and recreate your client"
             )
+
+        if self.has_property_changed('UserPoolId'):
+            # A different UserPool will require a recreation of the client
+            # Delete will be triggered by CloudFormation if the create is successful
+            return self.create()
 
         params = {
             'UserPoolId': self.user_pool_id,
