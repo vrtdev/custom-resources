@@ -114,7 +114,7 @@ class LambdaBackedCustomResource(CustomResource):
         default_settings = {
             'Description': Sub('{name} - ${{AWS::StackName}}'.format(name=cls.resource_type)),
             'Handler': 'index.handler',
-            'Runtime': 'python3.6',
+            'Runtime': 'python3.9',
         }
         settings = cls._update_lambda_settings(default_settings)
         return settings
