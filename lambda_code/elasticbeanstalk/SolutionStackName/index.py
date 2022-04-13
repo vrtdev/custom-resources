@@ -65,8 +65,12 @@ class SolutionStackName(CloudFormationCustomResource):
 
     def filter_stack(self, stack_dict):
         for key, value in self.filter.items():
-            if not stack_dict[key].startswith(value):
-                return False
+            if type(stack_dict[key]) == str:
+                if not stack_dict[key].startswith(value):
+                    return False
+            else:
+                if stack_dict[key] != value:
+                    return False
         # All filter items match
 
         return stack_dict['ami'].startswith(self.ami_starts_with)
