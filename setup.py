@@ -17,9 +17,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 2.7',
-        # Troposhere does not support python 3.6 at this time.
-        # 'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.9',
     ],
     keywords='cloudformation aws',
     packages=['custom_resources'],

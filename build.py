@@ -16,11 +16,6 @@ import shutil
 import typing
 import zipfile
 
-try:
-    from pip import main as pipmain  # pip 9
-except ImportError:
-    from pip._internal import main as pipmain  # pip 10
-
 import troposphere
 from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants
 from custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
