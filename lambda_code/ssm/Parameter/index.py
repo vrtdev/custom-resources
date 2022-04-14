@@ -4,6 +4,7 @@ import os
 import random
 import string
 import typing
+import json
 from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
@@ -63,6 +64,9 @@ class Parameter(CloudFormationCustomResource):
     """
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Name instead
+
+    def __init__(self, *args, **kwargs):
+        super(Parameter, self).__init__(*args, **kwargs)
 
     def validate(self):
         self.name = self.resource_properties.get('Name')
@@ -209,5 +213,16 @@ class Parameter(CloudFormationCustomResource):
         except ssm.exceptions.ParameterNotFound:
             pass
 
+    @classmethod
+    def get_dict_value(cls, param_name):
+        ssm = cls.get_boto3_client('ssm')
+        try:
+            param = ssm.get_parameter(
+                Name=param_name,
+            )
+
+            return json.loads(param['Parameter']['Value'])
+        except ssm.exceptions.ParameterNotFound:
+            raise
 
 handler = Parameter.get_handler()
