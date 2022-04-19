@@ -63,10 +63,7 @@ class ParseDict(LambdaBackedCustomResource):
             "Statement": [{
                 "Effect": "Allow",
                 "Action": [
-                    "ssm:DescribeParameters",
-                    "ssm:GetParameter",
                     "ssm:GetParameters",
-                    "ssm:GetParametersByPath",
                 ],
                 "Resource": "*",
             }],
