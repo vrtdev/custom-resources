@@ -22,6 +22,7 @@ class ParseDict(CloudFormationCustomResource):
 
     Properties:
         Name: str: Name of the Parameter (including namespace)
+        Serial: str: Use this to force an update
     """
 
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
