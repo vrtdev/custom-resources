@@ -37,7 +37,9 @@ class ParseDict(CloudFormationCustomResource):
 
     def create(self):
         ssm = self.get_boto3_client('ssm')
+        print(f"Retrieving parameter with path '{self.name}'")
         param = ssm.get_parameter(Name=self.name)
+        print(f"Got value: '{param['Parameter']['Value']}'")
         return json.loads(param['Parameter']['Value'])
 
     def update(self):
