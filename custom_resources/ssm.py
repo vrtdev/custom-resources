@@ -52,7 +52,7 @@ class Parameter(LambdaBackedCustomResource):
 
 class ParseDict(LambdaBackedCustomResource):
     props = {
-        'Name': (string_types, True),  # The parameter path including namespace
+        'Names': ([string_types], True),  # The parameter paths including namespace
         'Serial': (string_types, False),  # Use this to force an update
     }
 
