@@ -48,3 +48,31 @@ class Parameter(LambdaBackedCustomResource):
         """
         # Keep legacy non-structured name for backward compatibility
         return ['SsmParameter']
+
+
+class ParseDict(LambdaBackedCustomResource):
+    props = {
+        'Names': ([string_types], True),  # The parameter paths including namespace
+        'Serial': (string_types, False),  # Use this to force an update
+    }
+
+    @classmethod
+    def _lambda_policy(cls):
+        return {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Action": [
+                    "ssm:GetParameters",
+                ],
+                "Resource": "*",
+            }],
+        }
+
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        # Avoid Injecting `0` in name by setting it statically
+        return ['SsmParseDict']
