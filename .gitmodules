@@ -1,0 +1,3 @@
+[submodule "lambda_code/mysql/MySQLUser"]
+	path = lambda_code/mysql/MySQLUser
+	url = https://github.com/binxio/cfn-mysql-user-provider.git
