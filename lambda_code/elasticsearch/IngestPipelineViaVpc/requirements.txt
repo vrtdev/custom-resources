@@ -1,0 +1,3 @@
+git+https://github.com/iRobotCorporation/cfn-custom-resource#egg=cfn-custom-resource
+elasticsearch
+requests-aws4auth
