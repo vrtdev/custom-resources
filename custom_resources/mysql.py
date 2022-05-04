@@ -21,6 +21,10 @@ class MySQLUser(LambdaBackedCustomResource):
         
         # Since it is a submodule, the handler is located in another location
         settings['Handler'] = 'src/mysql_user_provider.handler'
+
+        # Enable Vpc config for this resource to be able to connect to a rds instance
+        settings['VpcConfig'] = {}
+
         return settings
 
     @classmethod
