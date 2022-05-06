@@ -244,6 +244,14 @@ def create_template(template_name, **kwargs):
     template.set_parameter_label(s3_path, "S3 path")
     template.add_parameter_to_group(s3_path, lambda_code_location)
 
+    vpc_id = template.add_parameter(troposphere.Parameter(
+        "VpcId",
+        Type=constants.STRING,
+        Default='',
+        Description="(optional) VPC id for Custom Resources that run attached to a VPC",
+    ))
+    template.set_parameter_label(vpc_id, "VPC Id")
+
     vpc_subnets = template.add_parameter(troposphere.Parameter(
         "VpcSubnets",
         # Type cannot be a list of subnets ids if we want them to also support being empty
@@ -252,7 +260,6 @@ def create_template(template_name, **kwargs):
         Description="(optional) VPC subnets for Custom Resources that run attached to a VPC"
     ))
     template.set_parameter_label(vpc_subnets, "VPC Subnets")
-    template.add_parameter_to_group(vpc_subnets, "VPC Settings")
 
     has_vpc_subnets = template.add_condition("HasVpcSubnets", Not(Equals(Join("", Ref(vpc_subnets)), "")))
 
@@ -273,6 +280,7 @@ def create_template(template_name, **kwargs):
                 GroupDescription="Security Group for the {custom_resource_name} custom resource".format(
                     custom_resource_name='.'.join(custom_resource.name)
                 ),
+                VpcId=Ref(vpc_id),
             ))
             created_aws_objects.append(security_group)
             created_aws_objects.append(template.add_output(Output(
