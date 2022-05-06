@@ -6,6 +6,10 @@ Usage:
     # Optionally add a parameter to make the stackname of the Custom Resources configurable
     custom_resources.use_custom_resources_stack_name_parameter(template)
 
+    OR
+
+    custom_resources.use_custom_resources_vpc_stack_name_parameter(template)
+
     template.add_resource(custom_resources.Possibly.Nested.SomeCR(
         "foo",
         Bar="baz"
@@ -42,6 +46,31 @@ def use_custom_resources_stack_name_parameter(
         'Type': troposphere.constants.STRING,
         'Default': "custom-resources",
         'Description': "Name of the custom resources stack",
+    }
+    param_kwargs.update(parameter_kwargs_dict)
+
+    p = template.add_parameter(troposphere.Parameter(
+        parameter_title,
+        **param_kwargs
+    ))
+
+    global CUSTOM_RESOURCES_STACK_NAME
+    CUSTOM_RESOURCES_STACK_NAME = troposphere.Ref(p)
+
+    return p
+
+def use_custom_resources_vpc_stack_name_parameter(
+        template,
+        parameter_title="CustomResourcesVpcStack",
+        parameter_kwargs_dict=None,
+):
+    if parameter_kwargs_dict is None:
+        parameter_kwargs_dict = {}
+
+    param_kwargs = {  # defaults
+        'Type': troposphere.constants.STRING,
+        'Default': "custom-resources-vpc",
+        'Description': "Name of the custom resources vpc stack",
     }
     param_kwargs.update(parameter_kwargs_dict)
 
