@@ -287,7 +287,7 @@ def create_template(template_name, **kwargs):
             )))
 
             function_settings["VpcConfig"] = awslambda.VPCConfig(
-                SecurityGroupIds=[Ref(security_group)],
+                SecurityGroupIds=[GetAtt(security_group, 'GroupId')],
                 SubnetIds=Ref(vpc_subnets)
             )
 
