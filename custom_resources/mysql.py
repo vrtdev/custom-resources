@@ -17,7 +17,7 @@ class MySQLUser(LambdaBackedCustomResource):
     @classmethod
     def _update_lambda_settings(cls, settings):
         # It can take a while to connect and add/update/remove users
-        settings['Timeout'] = 300
+        settings['Timeout'] = 30
         
         # Since it is a submodule, the handler is located in another location
         settings['Handler'] = 'src/mysql_user_provider.handler'
