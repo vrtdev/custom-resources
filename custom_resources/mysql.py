@@ -12,6 +12,7 @@ class MySQLUser(LambdaBackedCustomResource):
         'WithDatabase': (bool, False),
         'DeletionPolicy': (string_types, False),
         'Database': (dict, True),
+        'Serial': (string_types, False),  # Use this to force an update
     }
 
     @classmethod
