@@ -1,4 +1,4 @@
 [submodule "lambda_code/mysql/MySQLUser"]
 	path = lambda_code/mysql/MySQLUser
 	url = https://github.com/vrtdev/cfn-mysql-user-provider.git
-	branch = feature/mysql-connection-timeout
+	branch = release/patch3

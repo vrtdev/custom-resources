@@ -6,6 +6,9 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 class MySQLUser(LambdaBackedCustomResource):
     props = {
         'User': (string_types, True),
+        'Grant': ([string_types], True),
+        'GrantOn': (string_types, True),
+        'WithGrantOption': (bool, False),
         'Password': (string_types, False),
         'PasswordParameterName': (string_types, False),
         'PasswordSecretName': (string_types, False),
