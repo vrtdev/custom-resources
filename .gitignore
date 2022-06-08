@@ -1,6 +1,7 @@
 /.idea
 /*.iml
 /*.egg-info
+/dist
 /venv*
 /output
 __pycache__

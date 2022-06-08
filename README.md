@@ -8,7 +8,7 @@ templates.
 Format
 ------
 
-A custom resources consists of minimum:
+A custom resource consists of minimum:
  * A python class somewhere in the `custom_resources` directory.
  * A directory with the same name/path in the `lambda_code` directory,
    containing the lambda handler.
@@ -50,7 +50,6 @@ The following (relative) paths are treated specially:
      templates. E.g. "Service@Foobar" for "Custom::Service@Foobar" resources.
 
 ### Step-by-Step instructions
-You can also 
 Assumptions:
 - You're working in a virtualenv
 - You have an S3 bucket to save the zip files in. We use `$S3_BUCKET` and `$S3_PATH` (should end in `/`)in the script below
@@ -68,4 +67,13 @@ aws s3 sync output/ s3://$S3_BUCKET/$S3_PATH
 echo "uploaded to s3://$S3_BUCKET/$S3_PATH"
 
 # Deploy the cloudformation template in output/cfn.json
+```
+
+Upload to Nexus
+---------------
+Uploading the custom-resources package to Nexus is simple, if you have the permissions to do so in Nexus. You first need to build the package, then you can either upload it through the Nexus web UI, or use twine to do so:
+```
+pip install -r dev-requirements.txt --upgrade
+python setup.py sdist
+twine upload --config-file pypirc -r nexus dist/*
 ```
