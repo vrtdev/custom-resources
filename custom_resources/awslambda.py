@@ -57,6 +57,7 @@ class LayerVersion(LambdaBackedCustomResource):
                     "lambda:ListLayerVersions",
                     "lambda:PublishLayerVersion",
                     "lambda:DeleteLayerVersion",
+                    "s3:GetObject",
                 ],
                 "Resource": "*",
             }],
