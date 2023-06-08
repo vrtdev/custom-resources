@@ -47,6 +47,12 @@ class LayerVersion(LambdaBackedCustomResource):
     }
 
     @classmethod
+    def _update_lambda_settings(cls, settings):
+        # It can take a while before the layer is published
+        settings['Timeout'] = 300
+        return settings
+
+    @classmethod
     def _lambda_policy(cls):
         return {
             "Version": "2012-10-17",
