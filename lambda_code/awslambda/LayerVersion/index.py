@@ -38,6 +38,8 @@ class LayerVersion(CloudFormationCustomResource):
     def create(self):
         result = self.get_boto3_client('lambda').publish_layer_version(**self.kwargs)
         self.physical_resource_id = result['LayerVersionArn']
+        self.resource_outputs['LayerName'] = self.resource_properties['LayerName']
+        self.resource_outputs['LayerVersionArn'] = result['LayerVersionArn']
         return {}
 
     def update(self):
