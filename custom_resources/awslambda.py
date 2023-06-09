@@ -33,3 +33,46 @@ class Version(LambdaBackedCustomResource):
         """
         # Keep legacy non-structured name for backward compatibility
         return ['LambdaVersion']
+
+
+class LayerVersion(LambdaBackedCustomResource):
+    props = {
+        'LayerName': (string_types, True),
+        'Content': (dict, True),
+        'Description': (string_types, False),
+        'LicenseInfo': (string_types, False),
+        'CompatibleArchitecture': ([string_types], False),
+        'CompatibleRuntimes': ([string_types], False),
+        'DeletionPolicy': (string_types, False),
+    }
+
+    @classmethod
+    def _update_lambda_settings(cls, settings):
+        # It can take a while before the layer is published
+        settings['Timeout'] = 300
+        return settings
+
+    @classmethod
+    def _lambda_policy(cls):
+        return {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Action": [
+                    "lambda:ListLayers",
+                    "lambda:ListLayerVersions",
+                    "lambda:PublishLayerVersion",
+                    "lambda:DeleteLayerVersion",
+                    "s3:GetObject",
+                ],
+                "Resource": "*",
+            }],
+        }
+
+    @classmethod
+    def name(cls):
+        """
+        :rtype: List[str]
+        """
+        # Keep legacy non-structured name for backward compatibility
+        return ['LambdaLayerVersion']
