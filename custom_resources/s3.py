@@ -14,6 +14,11 @@ class Object(LambdaBackedCustomResource):
     }
 
     @classmethod
+    def _update_lambda_settings(cls, settings):
+        settings['Timeout'] = 10
+        return settings
+
+    @classmethod
     def _lambda_policy(cls):
         return {
             "Version": "2012-10-17",
