@@ -11,6 +11,7 @@ class Object(LambdaBackedCustomResource):
         'Body': (object, False),  # string, or JSON-able content. Default: empty file
         'ObjectMetadata': (object, False),  # dict, default: {}  ('Metadata' is reserved)
         'ContentType': (string_types, False),
+        'CacheControl': (string_types, False),
     }
 
     @classmethod

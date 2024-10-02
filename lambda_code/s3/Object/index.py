@@ -26,12 +26,17 @@ class S3Object(CloudFormationCustomResource):
         self.body = self.resource_properties.get('Body', '')
         self.object_metadata = self.resource_properties.get('ObjectMetadata', {})
         self.content_type = self.resource_properties.get('ContentType', 'binary/octet-stream')  # copy AWS default
+        self.cache_control = self.resource_properties.get('CacheControl', None)
 
         if not isinstance(self.body, str):
             self.body = json.dumps(self.body)
 
     def create(self):
         self.physical_resource_id = f"{self.bucket}/{self.key}"
+
+        optional_props = {}
+        if self.cache_control is not None:
+            optional_props['CacheControl'] = self.cache_control
 
         s3_client = self.get_boto3_session().client('s3', region_name=self.region)
         s3_client.put_object(
@@ -40,6 +45,7 @@ class S3Object(CloudFormationCustomResource):
             Body=self.body.encode('utf-8'),
             Metadata=self.object_metadata,
             ContentType=self.content_type,
+            **optional_props,
         )
 
     def update(self):
