@@ -25,6 +25,11 @@ class Parameter(LambdaBackedCustomResource):
             raise TypeError("{}: Value and RandomValue are mutually exclusive".format(self.__class__.__name__))
 
     @classmethod
+    def _update_lambda_settings(cls, settings):
+        settings['Runtime'] = 'python3.12'
+        return settings
+
+    @classmethod
     def _lambda_policy(cls):
         return {
             "Version": "2012-10-17",
