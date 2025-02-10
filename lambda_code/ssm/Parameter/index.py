@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import json
 import os
 import random
 import string
@@ -54,7 +55,10 @@ class Parameter(CloudFormationCustomResource):
         Type: enum["String", "StringList", "SecureString"]: optional:
               default "String"
         KeyId: str: required if Type==SecureString
-        Value: str: required unless using RandomValue
+        Value: str: required unless using ValueFrom or RandomValue
+        ValueFrom: str: optional:
+            ARN of another parameter, which can be found in SSM or SecretsManager,
+            and where the Value is retrieved from.
         RandomValue: dict: optional:
             Set Value to a random string with these properties:
              - length: int: default=22
@@ -94,6 +98,8 @@ class Parameter(CloudFormationCustomResource):
 
         self.value = self.resource_properties.get('Value', '')
         self.random_value = False
+        if 'ValueFrom' in self.resource_properties:
+            self.value = self.fetch_value(self.resource_properties['ValueFrom'])
         if 'RandomValue' in self.resource_properties:
             self.random_value = True
             self.value = generate_random(self.resource_properties['RandomValue'])
@@ -126,6 +132,38 @@ class Parameter(CloudFormationCustomResource):
                 attr['ValueHash'] = hashlib.md5(self.value.encode('utf-8')).hexdigest()
 
         return attr
+
+    def fetch_value(self, value_from: str):
+        svc = value_from.split(':')[2]
+        match svc:
+            case 'ssm':
+                ssm = self.get_boto3_client(svc)
+                try:
+                    response = ssm.get_parameter(
+                        Name=value_from,
+                        WithDecryption=True
+                    )
+                    return response['Parameter']['Value']
+                except ssm.exceptions.ParameterNotFound:
+                    raise ValueError(f"Parameter {value_from} not found")
+            case 'secretsmanager':
+                secretsmanager = self.get_boto3_client(svc)
+                try:
+                    # value_from = arn:aws:secretsmanager:region:aws_account_id:secret:secret-name:json-key:version-stage:version-id
+                    # GetSecretValue does not accept ARNs that include the json-key.
+                    # We need to parse the value ourselves and return the correct value if json-key is present.
+                    arn_parts = value_from.split(':')
+                    json_key = arn_parts[7]
+                    extras = {k: v for k, v in zip(['VersionId', 'VersionStage'], arn_parts[8:]) if v}
+                    response = secretsmanager.get_secret_value(
+                        SecretId=':'.join(arn_parts[0:7]),
+                        **extras,
+                    )
+                    return json.loads(response['SecretString']).get(json_key)
+                except secretsmanager.exceptions.ResourceNotFoundException:
+                    raise ValueError(f"Secret {value_from} not found")
+            case _:
+                raise ValueError(f"Unknown value_from: {value_from}")
 
     def put_parameter(self, overwrite: bool = False):
         ssm = self.get_boto3_client('ssm')
@@ -192,6 +230,7 @@ class Parameter(CloudFormationCustomResource):
             self.has_property_changed('Type') or \
             self.has_property_changed('KeyId') or \
             self.has_property_changed('Value') or \
+            self.has_property_changed('ValueFrom') or \
             self.has_property_changed('RandomValue')
 
         need_get = self.return_value or self.return_value_hash
