@@ -1,3 +1,4 @@
+import base64
 import datetime
 import hashlib
 import json
@@ -5,6 +6,7 @@ import os
 import random
 import string
 import typing
+from enum import Enum
 
 from cfn_custom_resource import CloudFormationCustomResource
 
@@ -14,6 +16,11 @@ except ImportError:
     CUSTOM_RESOURCE_NAME = 'dummy'
 
 REGION = os.environ['AWS_REGION']
+
+
+class Encoding(Enum):
+    NONE = "none"
+    BASE64 = "base64"
 
 
 def strtobool(val):
@@ -47,6 +54,10 @@ def generate_random(specs: dict) -> str:
     return r
 
 
+def encode_base64(value: str) -> str:
+    return base64.b64encode(value.encode('utf-8')).decode('utf-8')
+
+
 class Parameter(CloudFormationCustomResource):
     """
     Properties:
@@ -64,6 +75,7 @@ class Parameter(CloudFormationCustomResource):
              - length: int: default=22
              - charset: string: default=ascii_lowercase + ascii_uppercase + digits
              - anything-else: whatever: if it is changed, the value is regenerated
+        Encoding: str: optional: default "none", options: "none", "base64"
         Tags: list of {'Key': k, 'Value': v}: optional:
 
         ReturnValue: bool: optional: default False
@@ -103,6 +115,14 @@ class Parameter(CloudFormationCustomResource):
         if 'RandomValue' in self.resource_properties:
             self.random_value = True
             self.value = generate_random(self.resource_properties['RandomValue'])
+        encoding_value = self.resource_properties.get('Encoding', Encoding.NONE.value)
+        try:
+            self.encoding = Encoding(encoding_value)
+        except ValueError:
+            raise ValueError(f"Invalid encoding value: {encoding_value}. Supported encodings: {[e.value for e in Encoding]}")
+
+        if self.encoding == Encoding.BASE64:
+            self.value = encode_base64(self.value)
 
         self.key_id = self.resource_properties.get('KeyId', None)
         self.tags = self.resource_properties.get('Tags', [])
@@ -229,6 +249,7 @@ class Parameter(CloudFormationCustomResource):
             self.has_property_changed('Description') or \
             self.has_property_changed('Type') or \
             self.has_property_changed('KeyId') or \
+            self.has_property_changed('Encoding') or \
             self.has_property_changed('Value') or \
             self.has_property_changed('ValueFrom') or \
             self.has_property_changed('RandomValue')
