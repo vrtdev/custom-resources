@@ -9,6 +9,7 @@ class Parameter(LambdaBackedCustomResource):
         'Name': (string_types, False),
         'Type': (string_types, False),
         'Description': (string_types, False),
+        'Encoding': (string_types, False),
         'Value': (string_types, False),
         'ValueFrom': (string_types, False),
         'KeyId': (string_types, False),
