@@ -18,9 +18,10 @@ except ImportError:
 REGION = os.environ['AWS_REGION']
 
 
-class Encoding(Enum):
-    NONE = "none"
-    BASE64 = "base64"
+ENCODE = {
+    'none': lambda x: x,
+    'base64': lambda x: base64.b64encode(x.encode('utf-8')).decode('utf-8'),
+}
 
 
 def strtobool(val):
@@ -52,10 +53,6 @@ def generate_random(specs: dict) -> str:
         for _ in range(length)
     ])
     return r
-
-
-def encode_base64(value: str) -> str:
-    return base64.b64encode(value.encode('utf-8')).decode('utf-8')
 
 
 class Parameter(CloudFormationCustomResource):
@@ -115,14 +112,11 @@ class Parameter(CloudFormationCustomResource):
         if 'RandomValue' in self.resource_properties:
             self.random_value = True
             self.value = generate_random(self.resource_properties['RandomValue'])
-        encoding_value = self.resource_properties.get('Encoding', Encoding.NONE.value)
+        self.encoding = self.resource_properties.get('Encoding', 'none')
         try:
-            self.encoding = Encoding(encoding_value)
-        except ValueError:
-            raise ValueError(f"Invalid encoding value: {encoding_value}. Supported encodings: {[e.value for e in Encoding]}")
-
-        if self.encoding == Encoding.BASE64:
-            self.value = encode_base64(self.value)
+            self.value = ENCODE[self.encoding](self.value)
+        except KeyError:
+            raise ValueError(f"Invalid encoding value: {self.encoding}. Supported encodings: {','.join(ENCODE.keys())}")
 
         self.key_id = self.resource_properties.get('KeyId', None)
         self.tags = self.resource_properties.get('Tags', [])
