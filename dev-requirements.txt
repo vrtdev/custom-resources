@@ -1,3 +1,13 @@
 -r requirements.txt
 git+https://github.com/vrtdev/cfn-custom-resource#egg=cfn-custom-resource
+boto3
+botostubs
 twine
+invoke
+flake8
+flake8-docstrings
+flake8-tidy-imports
+flake8-commas
+flake8-string-format
+flake8-pep3101 # Use .format <-> %
+flake8-builtins
