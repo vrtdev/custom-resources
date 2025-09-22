@@ -2,6 +2,23 @@ from six import string_types
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
+class InstanceIpv6Address(LambdaBackedCustomResource):
+    props = {
+        'InstanceId': (string_types, True),  # e.g. i-1234567890abcdef0
+    }
+
+    @classmethod
+    def _lambda_policy(cls):
+        return {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Action": [
+                    "ec2:DescribeNetworkInterfaces",
+                ],
+                "Resource": "*",
+            }],
+        }
 
 class FindAmi(LambdaBackedCustomResource):
     props = {
