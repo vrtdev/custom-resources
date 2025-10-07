@@ -33,7 +33,6 @@ class S3Object(CloudFormationCustomResource):
             self.body = json.dumps(self.body)
 
     def create(self, allow_overwrite_override = False):
-        self.physical_resource_id = f"{self.bucket}/{self.key}"
 
         optional_props = {}
         if self.cache_control is not None:
@@ -51,6 +50,8 @@ class S3Object(CloudFormationCustomResource):
             ContentType=self.content_type,
             **optional_props,
         )
+        # set the resource id after creation so we can't overwrite by accident
+        self.physical_resource_id = f"{self.bucket}/{self.key}"
 
     def update(self):
         if self.has_property_changed('Key'):
@@ -59,10 +60,17 @@ class S3Object(CloudFormationCustomResource):
             return self.create(allow_overwrite_override=True)
 
     def delete(self):
+        # Split the string at the first occurrence of sep, and return a 3-tuple
+        # If the separator is not found, return a 3-tuple containing the string itself, followed by two empty strings.
+        bucket, sep, key = self.physical_resource_id.partition("/")
+        if not key:
+            # nothing to do - create failed
+            return
+
         s3_client = self.get_boto3_session().client('s3', region_name=self.region)
         s3_client.delete_object(
-            Bucket=self.bucket,
-            Key=self.key,
+            Bucket=bucket,
+            Key=key,
         )
 
 
