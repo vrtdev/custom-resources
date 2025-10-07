@@ -40,7 +40,7 @@ class S3Object(CloudFormationCustomResource):
             optional_props['CacheControl'] = self.cache_control
 
         if self.allow_overwrite is False and allow_overwrite_override is False:
-            optional_props['If-None-Match'] = '*'
+            optional_props['IfNoneMatch'] = '*'
 
         s3_client = self.get_boto3_session().client('s3', region_name=self.region)
         s3_client.put_object(
