@@ -27,6 +27,7 @@ class S3Object(CloudFormationCustomResource):
         self.object_metadata = self.resource_properties.get('ObjectMetadata', {})
         self.content_type = self.resource_properties.get('ContentType', 'binary/octet-stream')  # copy AWS default
         self.cache_control = self.resource_properties.get('CacheControl', None)
+        self.allow_overwrite = self.resource_properties.get('AllowOverwrite', False)
 
         if not isinstance(self.body, str):
             self.body = json.dumps(self.body)
@@ -37,6 +38,9 @@ class S3Object(CloudFormationCustomResource):
         optional_props = {}
         if self.cache_control is not None:
             optional_props['CacheControl'] = self.cache_control
+
+        if self.allow_overwrite is False:
+            optional_props['If-None-Match'] = '*'
 
         s3_client = self.get_boto3_session().client('s3', region_name=self.region)
         s3_client.put_object(
