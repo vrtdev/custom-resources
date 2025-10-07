@@ -50,13 +50,13 @@ class S3Object(CloudFormationCustomResource):
             ContentType=self.content_type,
             **optional_props,
         )
-        # set the resource id after creation so we can't overwrite by accident
+        # set the resource id after creation so we can't delete by accident
         self.physical_resource_id = f"{self.bucket}/{self.key}"
 
     def update(self):
-        if self.has_property_changed('Key'):
+        if self.has_property_changed('Key') or self.has_property_changed('Bucket'):
             return self.create()
-        else:  # Key hasn't changed
+        else:  # Key or Bucket hasn't changed
             return self.create(allow_overwrite_override=True)
 
     def delete(self):
