@@ -35,6 +35,8 @@ class S3Object(CloudFormationCustomResource):
             self.body = json.dumps(self.body)
 
     def create(self, allow_overwrite_override = False):
+        # set the resource id after creation so we can't delete by accident
+        self.physical_resource_id = "none yet"
 
         optional_props = {}
         if self.cache_control is not None:
@@ -52,7 +54,7 @@ class S3Object(CloudFormationCustomResource):
             ContentType=self.content_type,
             **optional_props,
         )
-        # set the resource id after creation so we can't delete by accident
+
         self.physical_resource_id = f"{self.bucket}/{self.key}"
 
     def update(self):
