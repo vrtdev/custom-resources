@@ -19,7 +19,6 @@ class S3Object(CloudFormationCustomResource):
     """
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use s3-path instead
-    BASE_LOGGER_LEVEL = logging.DEBUG
 
     def validate(self):
         self.region = self.resource_properties.get('Region', REGION)
