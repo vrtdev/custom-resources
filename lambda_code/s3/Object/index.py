@@ -32,14 +32,14 @@ class S3Object(CloudFormationCustomResource):
         if not isinstance(self.body, str):
             self.body = json.dumps(self.body)
 
-    def create(self):
+    def create(self, allow_overwrite_override = False):
         self.physical_resource_id = f"{self.bucket}/{self.key}"
 
         optional_props = {}
         if self.cache_control is not None:
             optional_props['CacheControl'] = self.cache_control
 
-        if self.allow_overwrite is False:
+        if self.allow_overwrite is False and allow_overwrite_override is False:
             optional_props['If-None-Match'] = '*'
 
         s3_client = self.get_boto3_session().client('s3', region_name=self.region)
@@ -53,7 +53,10 @@ class S3Object(CloudFormationCustomResource):
         )
 
     def update(self):
-        return self.create()
+        if self.has_property_changed('Key'):
+            return self.create()
+        else:  # Key hasn't changed
+            return self.create(allow_overwrite_override=True)
 
     def delete(self):
         s3_client = self.get_boto3_session().client('s3', region_name=self.region)
