@@ -1,26 +1,30 @@
+"""Custom Resource to create/update/delete objects (files) in S3 buckets."""
+
 import json
-import logging
 import os
 
-from cfn_custom_resource import CloudFormationCustomResource
 from _metadata import CUSTOM_RESOURCE_NAME
-
+from cfn_custom_resource import CloudFormationCustomResource
 
 REGION = os.environ['AWS_REGION']
 
 
 class S3Object(CloudFormationCustomResource):
     """
+    Create and manage an S3 Object as a CloudFormation resource.
+
     Properties:
       Region: str: region of bucket (default: current region)
       Bucket: str: bucket name
       Key: str: location within bucket
       Body: str: content of object to create/update
     """
+
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use s3-path instead
 
     def validate(self):
+        """Validate input parameters."""
         self.region = self.resource_properties.get('Region', REGION)
         self.bucket = self.resource_properties['Bucket']
         self.key = self.resource_properties['Key']
@@ -33,7 +37,8 @@ class S3Object(CloudFormationCustomResource):
         if not isinstance(self.body, str):
             self.body = json.dumps(self.body)
 
-    def create(self, allow_overwrite_override = False):
+    def create(self, allow_overwrite_override=False):
+        """Create the object."""
         # set the resource id after creation so we can't delete by accident
         self.physical_resource_id = "none yet"
 
@@ -57,12 +62,14 @@ class S3Object(CloudFormationCustomResource):
         self.physical_resource_id = f"{self.bucket}/{self.key}"
 
     def update(self):
+        """Update the object."""
         if self.has_property_changed('Key') or self.has_property_changed('Bucket'):
             return self.create()
         else:  # Key or Bucket hasn't changed
             return self.create(allow_overwrite_override=True)
 
     def delete(self):
+        """Delete the object."""
         # Split the string at the first occurrence of sep, and return a 3-tuple
         # If the separator is not found, return a 3-tuple containing the string itself, followed by two empty strings.
         bucket, sep, key = self.physical_resource_id.partition("/")
