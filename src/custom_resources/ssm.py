@@ -18,7 +18,7 @@ class Parameter(LambdaBackedCustomResource):
         'KeyId': (str, False),
         'RandomValue': (dict, False),
         'Tags': (Tags, False),
-        'ReturnValue': (bool, False),
+        'ReturnValue': (bool, False),  # Deprecated
     }
 
     def validate(self):
