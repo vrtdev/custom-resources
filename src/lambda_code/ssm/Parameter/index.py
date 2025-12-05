@@ -1,8 +1,6 @@
 """Custom Resource to create an SSM Parameter."""
 
 import base64
-import datetime
-import hashlib
 import json
 import os
 import random
@@ -70,13 +68,6 @@ class Parameter(CloudFormationCustomResource):
             Setting this option to TRUE adds additional Update restrictions:
             Any change requires a password re-generation. The resource will fail
             otherwise
-
-        ReturnValueHash: bool: optional: default False
-            Similar to ReturnValue, but returns a value that changes whenever the
-            value changes in the 'ValueHash' attribute (useful to import as dummy
-            environment variable to trigger a re-deploy).
-
-            Same Update restrictions apply.
     """
 
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
@@ -110,7 +101,6 @@ class Parameter(CloudFormationCustomResource):
         self.key_id = self.resource_properties.get('KeyId', None)
         self.tags = self.resource_properties.get('Tags', [])
         self.return_value = strtobool(self.resource_properties.get('ReturnValue', 'false'))
-        self.return_value_hash = strtobool(self.resource_properties.get('ReturnValueHash', 'false'))
 
     def attributes(self):
         """Construct the attributes to return to CloudFormation."""
@@ -121,19 +111,6 @@ class Parameter(CloudFormationCustomResource):
 
         if self.return_value:
             attr['Value'] = self.value
-
-        if self.return_value_hash:
-            if self.random_value:
-                # Password is randomly generated. Use current time as "hash".
-                # We can't re-generate the same ValueHash this way, but we fail
-                # Update's anyway in this case.
-                attr['ValueHash'] = datetime.datetime.utcnow().isoformat()
-            else:
-                # There really is no reason for this case. The Value is given as input
-                # parameter, so it's not sensitive. Requesting a hash is silly.
-                # Use MD5 to "hide" the Value somewhat, but no security guarantees
-                # can be given anyway
-                attr['ValueHash'] = hashlib.md5(self.value.encode('utf-8')).hexdigest()
 
         return attr
 
@@ -244,7 +221,7 @@ class Parameter(CloudFormationCustomResource):
             self.has_property_changed('ValueFrom') or \
             self.has_property_changed('RandomValue')
 
-        need_get = self.return_value or self.return_value_hash
+        need_get = self.return_value
 
         if (need_put or need_get) and not can_put:
             # We need to maintain the previously generated Value

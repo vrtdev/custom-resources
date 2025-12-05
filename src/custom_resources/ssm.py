@@ -19,7 +19,6 @@ class Parameter(LambdaBackedCustomResource):
         'RandomValue': (dict, False),
         'Tags': (Tags, False),
         'ReturnValue': (bool, False),
-        'ReturnValueHash': (bool, False),
     }
 
     def validate(self):
