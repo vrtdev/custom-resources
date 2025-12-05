@@ -1,3 +1,5 @@
+"""Custom Resource to create an SSM Parameter."""
+
 import base64
 import datetime
 import hashlib
@@ -6,7 +8,6 @@ import os
 import random
 import string
 import typing
-from enum import Enum
 
 from cfn_custom_resource import CloudFormationCustomResource
 
@@ -17,7 +18,6 @@ except ImportError:
 
 REGION = os.environ['AWS_REGION']
 
-
 ENCODE = {
     'none': lambda x: x,
     'base64': lambda x: base64.b64encode(x.encode('utf-8')).decode('utf-8'),
@@ -25,7 +25,8 @@ ENCODE = {
 
 
 def strtobool(val):
-    """Convert a string representation of truth to true (1) or false (0).
+    """
+    Convert a string representation of truth to true (1) or false (0).
 
     True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
@@ -39,10 +40,11 @@ def strtobool(val):
     elif val in ('n', 'no', 'f', 'false', 'off', '0'):
         return 0
     else:
-        raise ValueError("invalid truth value %r" % (val,))
+        raise ValueError(f"invalid truth value '{val}'")
 
 
 def generate_random(specs: dict) -> str:
+    """Generate a random string."""
     length = int(specs.get('length', 22))
     charset = specs.get('charset',
                         string.ascii_uppercase +
@@ -57,6 +59,8 @@ def generate_random(specs: dict) -> str:
 
 class Parameter(CloudFormationCustomResource):
     """
+    Custom Resource class to create an SSM Parameter with some features that aren't currently available through standard CloudFormation.
+
     Properties:
         Name: str: optional: Name of the Parameter (including namespace)
         Description: str: optional:
@@ -91,10 +95,12 @@ class Parameter(CloudFormationCustomResource):
 
             Same Update restrictions apply.
     """
+
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
     DISABLE_PHYSICAL_RESOURCE_ID_GENERATION = True  # Use Name instead
 
     def validate(self):
+        """Validate input parameters."""
         self.name = self.resource_properties.get('Name')
         if self.name is None:
             self.name = self.generate_unique_id(
@@ -124,9 +130,10 @@ class Parameter(CloudFormationCustomResource):
         self.return_value_hash = strtobool(self.resource_properties.get('ReturnValueHash', 'false'))
 
     def attributes(self):
+        """Construct the attributes to return to CloudFormation."""
         account_id = self.context.invoked_function_arn.split(":")[4]
         attr = {
-            'Arn': 'arn:aws:ssm:{}:{}:parameter{}'.format(REGION, account_id, self.name)
+            'Arn': f'arn:aws:ssm:{REGION}:{account_id}:parameter{self.name}',
         }
 
         if self.return_value:
@@ -148,6 +155,7 @@ class Parameter(CloudFormationCustomResource):
         return attr
 
     def fetch_value(self, value_from: str):
+        """Fetch the value from another parameter."""
         svc = value_from.split(':')[2]
         match svc:
             case 'ssm':
@@ -155,7 +163,7 @@ class Parameter(CloudFormationCustomResource):
                 try:
                     response = ssm.get_parameter(
                         Name=value_from,
-                        WithDecryption=True
+                        WithDecryption=True,
                     )
                     return response['Parameter']['Value']
                 except ssm.exceptions.ParameterNotFound:
@@ -180,6 +188,7 @@ class Parameter(CloudFormationCustomResource):
                 raise ValueError(f"Unknown value_from: {value_from}")
 
     def put_parameter(self, overwrite: bool = False):
+        """Use AWS API to create or update the parameter."""
         ssm = self.get_boto3_client('ssm')
         params = {
             'Name': self.name,
@@ -198,10 +207,12 @@ class Parameter(CloudFormationCustomResource):
 
         return self.attributes()
 
-    def update_tags(self,
-                    new_tags: typing.List[typing.Dict[str, str]],
-                    old_tags: typing.List[typing.Dict[str, str]] = None
-                    ) -> None:
+    def update_tags(
+            self,
+            new_tags: typing.List[typing.Dict[str, str]],
+            old_tags: typing.List[typing.Dict[str, str]] = None,
+    ) -> None:
+        """Update tags on the resource."""
         if old_tags is None:
             old_tags = []
 
@@ -233,9 +244,11 @@ class Parameter(CloudFormationCustomResource):
         )
 
     def create(self):
+        """Create the resource."""
         return self.put_parameter(overwrite=False)
 
     def update(self):
+        """Update the resource."""
         can_put = (not self.random_value) or \
                   (self.random_value and self.has_property_changed('RandomValue'))
 
@@ -272,6 +285,7 @@ class Parameter(CloudFormationCustomResource):
         return self.attributes()
 
     def delete(self):
+        """Delete the resource."""
         ssm = self.get_boto3_client('ssm')
         try:
             ssm.delete_parameter(
