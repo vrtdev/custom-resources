@@ -60,14 +60,7 @@ class Parameter(CloudFormationCustomResource):
         Encoding: str: optional: default "none", options: "none", "base64"
         Tags: list of {'Key': k, 'Value': v}: optional:
 
-        ReturnValue: bool: optional: default False
-            Return the value as the 'Value' attribute.
-            Only useful if RandomValue is used to get the plaintext version
-            (e.g. when creating RDS'es)
-
-            Setting this option to TRUE adds additional Update restrictions:
-            Any change requires a password re-generation. The resource will fail
-            otherwise
+        ReturnValue: bool: deprecated
     """
 
     RESOURCE_TYPE_SPEC = CUSTOM_RESOURCE_NAME
@@ -100,17 +93,22 @@ class Parameter(CloudFormationCustomResource):
 
         self.key_id = self.resource_properties.get('KeyId', None)
         self.tags = self.resource_properties.get('Tags', [])
-        self.return_value = strtobool(self.resource_properties.get('ReturnValue', 'false'))
 
     def attributes(self):
         """Construct the attributes to return to CloudFormation."""
         account_id = self.context.invoked_function_arn.split(":")[4]
         attr = {
             'Arn': f'arn:aws:ssm:{REGION}:{account_id}:parameter{self.name}',
+            'Value': ''.join([
+                '{{',
+                ':'.join([
+                    'resolve',
+                    'ssm-secure' if self.type == 'SecureString' else 'ssm',
+                    self.physical_resource_id,
+                ]),
+                '}}',
+            ]) if self.random_value else self.value,
         }
-
-        if self.return_value:
-            attr['Value'] = self.value
 
         return attr
 
@@ -221,9 +219,7 @@ class Parameter(CloudFormationCustomResource):
             self.has_property_changed('ValueFrom') or \
             self.has_property_changed('RandomValue')
 
-        need_get = self.return_value
-
-        if (need_put or need_get) and not can_put:
+        if need_put and not can_put:
             # We need to maintain the previously generated Value
             # We are very limited in the updates we can perform
             raise RuntimeError(
