@@ -1,11 +1,9 @@
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
 class JoinGlobalTable(LambdaBackedCustomResource):
     props = {
-        'TableName': (string_types, True),
+        'TableName': (str, True),
     }
 
     @classmethod
@@ -38,8 +36,8 @@ class JoinGlobalTable(LambdaBackedCustomResource):
 
 class Item(LambdaBackedCustomResource):
     props = {
-        'Region': (string_types, False),
-        'TableName': (string_types, True),
+        'Region': (str, False),
+        'TableName': (str, True),
         'ItemKey': (dict, True),
         'ItemValue': (dict, False),
         'Overwrite': (bool, False),

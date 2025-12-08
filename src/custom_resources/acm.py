@@ -1,4 +1,3 @@
-from six import string_types
 from troposphere import Tags
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
@@ -6,9 +5,9 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 class DnsValidatedCertificate(LambdaBackedCustomResource):
     props = {
-        'DomainName': (string_types, True),
-        'SubjectAlternativeNames': ([string_types], False),
-        'Region': (string_types, False),  # Default: current region
+        'DomainName': (str, True),
+        'SubjectAlternativeNames': ([str], False),
+        'Region': (str, False),  # Default: current region
         'Tags': (Tags, False),
     }
 

@@ -1,5 +1,4 @@
 """Custom resources related to ElasticTranscoder."""
-from six import string_types
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
@@ -10,10 +9,10 @@ class Pipeline(LambdaBackedCustomResource):
     """
 
     props = {
-        'Name': (string_types, True),
-        'InputBucket': (string_types, True),
-        'OutputBucket': (string_types, True),
-        'Role': (string_types, True),
+        'Name': (str, True),
+        'InputBucket': (str, True),
+        'OutputBucket': (str, True),
+        'Role': (str, True),
         'Notifications': (dict, True),
     }
 

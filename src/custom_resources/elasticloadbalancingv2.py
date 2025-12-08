@@ -1,5 +1,3 @@
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
@@ -13,7 +11,7 @@ class NlbSourceIps(LambdaBackedCustomResource):
         "IPv4Address1": "192.0.2.2"
     """
     props = {
-        'LoadBalancerArn': (string_types, True),
+        'LoadBalancerArn': (str, True),
     }
 
     @classmethod

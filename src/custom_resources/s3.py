@@ -1,17 +1,15 @@
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
 class Object(LambdaBackedCustomResource):
     props = {
-        'Region': (string_types, False),  # Default: current region
-        'Bucket': (string_types, True),  # Bucket name
-        'Key': (string_types, True),  # Location within bucket
+        'Region': (str, False),  # Default: current region
+        'Bucket': (str, True),  # Bucket name
+        'Key': (str, True),  # Location within bucket
         'Body': (object, False),  # string, or JSON-able content. Default: empty file
         'ObjectMetadata': (object, False),  # dict, default: {}  ('Metadata' is reserved)
-        'ContentType': (string_types, False),
-        'CacheControl': (string_types, False),
+        'ContentType': (str, False),
+        'CacheControl': (str, False),
     }
 
     @classmethod

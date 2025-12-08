@@ -1,7 +1,6 @@
 """Custom resources related to Cognito."""
 # wraps around http://boto3.readthedocs.io/en/latest/reference/services/cognito-idp.html#CognitoIdentityProvider.Client.create_user_pool_client
 
-from six import string_types
 from troposphere.cognito import TokenValidityUnits
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
@@ -14,18 +13,18 @@ class UserPoolClient(LambdaBackedCustomResource):
     """
 
     props = {
-        'ClientName': (string_types, True),
-        'UserPoolId': (string_types, True),
+        'ClientName': (str, True),
+        'UserPoolId': (str, True),
         'GenerateSecret': (bool, False),
-        'SupportedIdentityProviders': ([string_types], False),
-        'ExplicitAuthFlows': ([string_types], False),
-        'LogoutURLs': ([string_types], False),
-        'CallbackURLs': ([string_types], False),
-        'DefaultRedirectURI': (string_types, False),
-        'ReadAttributes': ([string_types], False),
-        'WriteAttributes': ([string_types], False),
-        'AllowedOAuthFlows': ([string_types], False),
-        'AllowedOAuthScopes': ([string_types], False),
+        'SupportedIdentityProviders': ([str], False),
+        'ExplicitAuthFlows': ([str], False),
+        'LogoutURLs': ([str], False),
+        'CallbackURLs': ([str], False),
+        'DefaultRedirectURI': (str, False),
+        'ReadAttributes': ([str], False),
+        'WriteAttributes': ([str], False),
+        'AllowedOAuthFlows': ([str], False),
+        'AllowedOAuthScopes': ([str], False),
         'AllowedOAuthFlowsUserPoolClient': (bool, False),
         'RefreshTokenValidity': (int, False),
         'AccessTokenValidity': (int, False),
@@ -78,8 +77,8 @@ class UserPoolDomain(LambdaBackedCustomResource):
     _deprecated_message = 'cognito.UserPoolDomain is now natively supported by CloudFormation'
 
     props = {
-        'UserPoolId': (string_types, True),
-        'Domain': (string_types, False),
+        'UserPoolId': (str, True),
+        'Domain': (str, False),
     }
 
     @classmethod
@@ -121,12 +120,12 @@ class UserPoolIdentityProvider(LambdaBackedCustomResource):
     _deprecated_message = 'cognito.UserPoolIdentityProvider is now natively supported by CloudFormation'
 
     props = {
-        'UserPoolId': (string_types, True),
-        'ProviderName': (string_types, True),
-        'ProviderType': (string_types, True),
+        'UserPoolId': (str, True),
+        'ProviderName': (str, True),
+        'ProviderType': (str, True),
         'ProviderDetails': (dict, True),
         'AttributeMapping': (dict, False),
-        'IdpIdentifiers': ([string_types], False),
+        'IdpIdentifiers': ([str], False),
     }
 
     @classmethod

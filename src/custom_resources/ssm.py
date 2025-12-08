@@ -1,6 +1,5 @@
 """Custom Resources for SSM Parameter Store."""
 
-from six import string_types
 from troposphere import Tags
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
@@ -10,13 +9,13 @@ class Parameter(LambdaBackedCustomResource):
     """Custom Resource to create or update an SSM Parameter Store parameter."""
 
     props = {
-        'Name': (string_types, False),
-        'Type': (string_types, False),
-        'Description': (string_types, False),
-        'Encoding': (string_types, False),
-        'Value': (string_types, False),
-        'ValueFrom': (string_types, False),
-        'KeyId': (string_types, False),
+        'Name': (str, False),
+        'Type': (str, False),
+        'Description': (str, False),
+        'Encoding': (str, False),
+        'Value': (str, False),
+        'ValueFrom': (str, False),
+        'KeyId': (str, False),
         'RandomValue': (dict, False),
         'Tags': (Tags, False),
         'ReturnValue': (bool, False),
@@ -34,7 +33,6 @@ class Parameter(LambdaBackedCustomResource):
     @classmethod
     def _update_lambda_settings(cls, settings):
         """Update the CloudFormation configuration for the lambda function."""
-        settings['Runtime'] = 'python3.12'
         return settings
 
     @classmethod
@@ -68,8 +66,8 @@ class ParseDict(LambdaBackedCustomResource):
     """Custom Resource to parse a dictionary from SSM Parameter Store."""
 
     props = {
-        'Names': ([string_types], True),  # The parameter paths including namespace
-        'Serial': (string_types, False),  # Use this to force an update
+        'Names': ([str], True),  # The parameter paths including namespace
+        'Serial': (str, False),  # Use this to force an update
     }
 
     @classmethod

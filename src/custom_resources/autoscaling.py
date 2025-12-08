@@ -1,5 +1,3 @@
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
@@ -10,7 +8,7 @@ class Renotify(LambdaBackedCustomResource):
     Useful to include with additional "DependsOn" resources.
     """
     props = {
-        'AutoScalingGroupName': (string_types, True),
+        'AutoScalingGroupName': (str, True),
     }
 
     @classmethod

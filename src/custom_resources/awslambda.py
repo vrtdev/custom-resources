@@ -1,14 +1,12 @@
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
 class Version(LambdaBackedCustomResource):
     props = {
-        'FunctionName': (string_types, True),
-        'Description': (string_types, False),
-        'CodeSha256': (string_types, False),
-        'Dummy': (string_types, False),  # Dummy parameter to trigger updates
+        'FunctionName': (str, True),
+        'Description': (str, False),
+        'CodeSha256': (str, False),
+        'Dummy': (str, False),  # Dummy parameter to trigger updates
     }
 
     @classmethod
@@ -37,13 +35,13 @@ class Version(LambdaBackedCustomResource):
 
 class LayerVersion(LambdaBackedCustomResource):
     props = {
-        'LayerName': (string_types, True),
+        'LayerName': (str, True),
         'Content': (dict, True),
-        'Description': (string_types, False),
-        'LicenseInfo': (string_types, False),
-        'CompatibleArchitecture': ([string_types], False),
-        'CompatibleRuntimes': ([string_types], False),
-        'DeletionPolicy': (string_types, False),
+        'Description': (str, False),
+        'LicenseInfo': (str, False),
+        'CompatibleArchitecture': ([str], False),
+        'CompatibleRuntimes': ([str], False),
+        'DeletionPolicy': (str, False),
     }
 
     @classmethod

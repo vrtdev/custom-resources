@@ -1,7 +1,6 @@
 import time
 import warnings
 
-from six import string_types
 from troposphere import iam, Sub, ImportValue
 from troposphere.cloudformation import CustomResource
 

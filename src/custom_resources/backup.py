@@ -1,4 +1,3 @@
-from six import string_types
 from troposphere import Tags
 
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
@@ -6,7 +5,7 @@ from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 class BackupVault(LambdaBackedCustomResource):
     props = {
-        'BackupVaultName': (string_types, True),
+        'BackupVaultName': (str, True),
         'BackupVaultTags': (dict, True),
     }
 
@@ -57,7 +56,7 @@ class BackupPlan(LambdaBackedCustomResource):
 
 class BackupSelection(LambdaBackedCustomResource):
     props = {
-        'BackupPlanId': (string_types, True),
+        'BackupPlanId': (str, True),
         'BackupSelection': (dict, True),
     }
 

@@ -1,16 +1,14 @@
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
 class Server(LambdaBackedCustomResource):
     props = {
-        'EndpointType': (string_types, False),  # Default: PUBLIC
+        'EndpointType': (str, False),  # Default: PUBLIC
         'EndpointDetails': (dict, False),  # only needed if endpoint type is VPC_ENDPOINT
-        'HostKey': (string_types, False),
-        'IdentityProviderType': (string_types, False),  # Default: SERVICE_MANAGED
+        'HostKey': (str, False),
+        'IdentityProviderType': (str, False),  # Default: SERVICE_MANAGED
         'IdentityProviderDetails': (dict, False),  # only needed if identity provider is API_GATEWAY
-        'LoggingRole': (string_types, False),
+        'LoggingRole': (str, False),
     }
 
     @classmethod
@@ -37,12 +35,12 @@ class Server(LambdaBackedCustomResource):
 
 class User(LambdaBackedCustomResource):
     props = {
-        'HomeDirectory': (string_types, False),  # will default to /{UserName}
-        'Role': (string_types, True),  # will need permissions to access a bucket
-        'Policy': (string_types, False),
-        'ServerId': (string_types, True),
-        'SshPublicKeyBody': (string_types, True),  # base64 encoded
-        'UserName': (string_types, True),
+        'HomeDirectory': (str, False),  # will default to /{UserName}
+        'Role': (str, True),  # will need permissions to access a bucket
+        'Policy': (str, False),
+        'ServerId': (str, True),
+        'SshPublicKeyBody': (str, True),  # base64 encoded
+        'UserName': (str, True),
     }
 
     @classmethod

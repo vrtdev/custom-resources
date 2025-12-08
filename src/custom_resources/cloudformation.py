@@ -1,7 +1,5 @@
 import time
 
-from six import string_types
-
 from .LambdaBackedCustomResource import LambdaBackedCustomResource
 
 
@@ -16,9 +14,9 @@ class Tags(LambdaBackedCustomResource):
     case.
     """
     props = {
-        'Omit': ([string_types], False),  # Keys to remove from list
+        'Omit': ([str], False),  # Keys to remove from list
         'Set': (dict, False),  # Keys to set/override/add, with the new values
-        'Dummy': (string_types, False),  # Dummy parameter to trigger updates
+        'Dummy': (str, False),  # Dummy parameter to trigger updates
     }
 
     def __init__(self, *args, **kwargs):
