@@ -1,0 +1,1 @@
+CUSTOM_RESOURCE_NAME = "Dummy"
