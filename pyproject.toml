@@ -1,0 +1,52 @@
+[project]
+name = "custom_resources"
+version = "2.0.0"
+description = 'Custom resources for Troposphere/CloudFormation.'
+readme = "README.md"
+authors = [
+    { name = 'VRT DPC', email = 'dpc@vrt.be' },
+]
+license-files = ["LICENSE.txt"]
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Programming Language :: Python :: 3.12',
+]
+keywords = ["cloudformation", "aws"]
+dependencies = [
+    "troposphere",
+    "pytest",
+    "cfn-custom-resource @ git+https://github.com/vrtdev/cfn-custom-resource",
+    "boto3",
+    "twine",
+    "invoke",
+    "flake8",
+    "flake8-docstrings",
+    "flake8-tidy-imports",
+    "flake8-commas",
+    "flake8-string-format",
+    "flake8-pep3101",
+    "flake8-builtins",
+]
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = [
+    "botostubs",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src",
+]
+
+[tool.uv]
+keyring-provider = "subprocess"
+
+[tool.uv.sources]
+custom_resources = { index = "nexus" }
+
+[[tool.uv.index]]
+name = "nexus"
+url = "https://nexus.core.a51.be/repository/pypi"
+explicit = true

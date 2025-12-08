@@ -1,9 +1,9 @@
 import boto3
 from troposphere import Template, constants, Parameter, Ref, dynamodb, Equals, If, Output
 
-import custom_resources.dynamodb
+from src import custom_resources
 
-from integration_tests.conftest import CloudFormationStates, wait_until_stack_stable, dict_to_param_array
+from conftest import CloudFormationStates, wait_until_stack_stable, dict_to_param_array
 
 template = Template()
 
@@ -83,7 +83,7 @@ template.add_output(Output(
 
 table1_selected = template.add_condition("Table1Selected", Equals(Ref(table), '1'))
 
-table_item = template.add_resource(custom_resources.dynamodb.Item(
+table_item = template.add_resource(src.custom_resources.dynamodb.Item(
     "Item",
     TableName=If(table1_selected, Ref(table1), Ref(table2)),
     ItemKey={'key': {'S': Ref(key)}},

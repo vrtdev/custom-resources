@@ -23,13 +23,13 @@ except ImportError:
 
 import troposphere
 from troposphere import Template, awslambda, logs, Sub, Output, Export, GetAtt, constants, Ref, Not, Equals, Join, ec2
-from custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
+from src.custom_resources.LambdaBackedCustomResource import LambdaBackedCustomResource
 
 parser = argparse.ArgumentParser(description='Build custom resources CloudFormation template')
 parser.add_argument('--class-dir', help='Where to look for the CustomResource classes',
-                    default='custom_resources')
+                    default='src/custom_resources')
 parser.add_argument('--lambda-dir', help='Where to look for defined Lambda functions',
-                    default='lambda_code')
+                    default='src/lambda_code')
 parser.add_argument('--output-dir', help='Where to place the Zip-files and the CloudFormation template',
                     default='output')
 

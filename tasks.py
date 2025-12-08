@@ -7,39 +7,23 @@ import fnmatch
 
 
 @task(
-    default=True,
     help={
-        'warnings': 'Warning configuration, as described at https://docs.python.org/2/using/cmdline.html#cmdoption-W \
-        for example, to disable Deprecation',
-        'filename': 'Path to template(s) to `compile`. Supports globbing.',
         'args': 'Additional arguments to pass to template file.'
                 ' Multiple arguments should each be specified with a new --args flag, ie. `invoke build --args foo --args bar`.',
     },
     iterable=['args'],
 )
-def build(ctx, warnings='once::DeprecationWarning', filename=None, args=None):
-    """Build all templates."""
-    import sys
-    import subprocess
-    import inspect
-    if filename is not None:
-        templates = [x for x in glob.glob(filename)]
-        if len(templates) == 0:
-            print("File `{0}` not found".format(filename))
-            exit(1)
-    else:
-        print("Building all templates")
-        os.chdir(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
-        templates = [x for x in glob.glob('templates/*/*') if x[-3:] == '.py']
+def build(ctx, args=None):
+    """Build all custom resources."""
+    command = ["python", "build.py"]
+    if args:
+        command.extend(args)
 
-    rv = 0
-    for template in templates:
-        if not os.path.isfile(template):
-            continue
-        print(" + Executing {0}{1}".format(template, f" with arguments {args}" if args else ""))
-        if subprocess.call([sys.executable, '-W{0}'.format(warnings), '{0}'.format(template)] + list(args)) != 0:
-            rv = 1
-    exit(rv)
+    import subprocess
+    subprocess.run(
+        command,
+        check=True,
+    )
 
 
 @task(help={
@@ -66,13 +50,12 @@ def clean(ctx, verbose=False, compiled=False):
     aliases=["flake8", "pep8"],
     help={
         'filename': 'File(s) to lint. Supports globbing.',
-        'envdir': 'Specify the python virtual env dir to ignore. Defaults to "venv".',
         'noglob': 'Disable globbing of filenames. Can give issues in virtual environments',
     },
 )
-def lint(ctx, filename=None, envdir='venv', noglob=False):
+def lint(ctx, filename=None, noglob=False):
     """Run flake8 python linter."""
-    command = 'flake8 --jobs=1 --exclude .git,' + envdir
+    command = 'flake8 --jobs=1'
 
     if filename is not None:
         if noglob:
@@ -108,18 +91,16 @@ def validate(ctx, filename=None):
 
 
 @task(
+    default=True,
     help={
         'filename': 'Path to template(s) to process. Supports globbing.',
-        'envdir': 'Specify the python virtual env dir to ignore. Defaults to "venv".',
         'noglob': 'Disable globbing of filenames. Can give issues in virtual environments',
-        'warnings': 'Warning configuration, as described at https://docs.python.org/3/using/cmdline.html#cmdoption-W'
-                    ' for example, to disable Deprecation',
         'args': 'Additional arguments to pass to template file.'
                 ' Multiple arguments should each be specified with a new --args flag, ie. `invoke process --args foo --args bar`.',
     },
     iterable=['args'],
 )
-def process(ctx, filename=None, envdir='venv', noglob=False, warnings='once::DeprecationWarning', args=None):
+def process(ctx, filename=None, noglob=False, args=None):
     """Run lint and build commands for specified template(s)."""
-    lint(ctx, filename, envdir, noglob)
-    build(ctx, warnings, filename, args)
+    # lint(ctx, filename, noglob)
+    build(ctx, args)
