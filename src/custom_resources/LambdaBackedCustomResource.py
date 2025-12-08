@@ -113,7 +113,7 @@ class LambdaBackedCustomResource(CustomResource):
         default_settings = {
             'Description': Sub('{name} - ${{AWS::StackName}}'.format(name=cls.resource_type)),
             'Handler': 'index.handler',
-            'Runtime': 'python3.9',
+            'Runtime': 'python3.14',
             'Timeout': '6',  # Increase default timeout from 3 seconds, as some lambda's hover at that threshold
         }
         settings = cls._update_lambda_settings(default_settings)
