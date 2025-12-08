@@ -10,7 +10,7 @@ from _metadata import CUSTOM_RESOURCE_NAME
 
 REGION = os.environ['AWS_REGION']
 POLL_INTERVAL_SECONDS = 5
-NOT_ALLOWED_IN_TOKEN = re.compile('[\W]+')
+NOT_ALLOWED_IN_TOKEN = re.compile(r'\W+')
 
 
 class DomainValidationNotThere(Exception):
