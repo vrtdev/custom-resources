@@ -19,11 +19,14 @@ def build(ctx, args=None):
     if args:
         command.extend(args)
 
-    import subprocess
-    subprocess.run(
-        command,
-        check=True,
-    )
+    ctx.run(" ".join(command))
+
+
+@task
+def integration_test(ctx):
+    """Build all custom resources."""
+    command = ["pytest", "integration_tests"]
+    ctx.run(" ".join(command))
 
 
 @task(help={
@@ -35,8 +38,7 @@ def clean(ctx, verbose=False, compiled=False):
     command = "rm -rvf {files}" if verbose else "rm -rf {files}"
 
     patterns = []
-    patterns.append('output/*.json')
-    patterns.append('output/*/*.json')
+    patterns.append('output/*')
     if compiled is True:
         for root, dirnames, filenames in os.walk('.'):
             for filename in fnmatch.filter(filenames, '*.pyc'):
