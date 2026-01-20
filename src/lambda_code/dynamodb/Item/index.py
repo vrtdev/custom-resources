@@ -9,9 +9,11 @@ Parameters:
 """
 import functools
 import os
-from distutils.util import strtobool
 
 from cfn_custom_resource import CloudFormationCustomResource
+
+from lambda_shared import strtobool
+
 try:
     from _metadata import CUSTOM_RESOURCE_NAME
 except ImportError:

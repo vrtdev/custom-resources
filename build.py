@@ -157,7 +157,10 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
             compression=zipfile.ZIP_DEFLATED,
     ) as zipf:
 
-        entries = set(os.scandir(custom_resource.lambda_path))
+        entries = {
+            *os.scandir(custom_resource.lambda_path),
+            *os.scandir("src/lambda_shared"),
+        }
 
         # See if there is a top-level `requirements.txt` or `test`
         requirements_file = None
@@ -209,6 +212,8 @@ def create_zip_file(custom_resource: CustomResource, output_dir: str):
                 lambda_prefix = custom_resource.lambda_path
                 if zip_path.startswith(lambda_prefix):
                     zip_path = zip_path[(len(lambda_prefix)+1):]
+                if zip_path.startswith("src"):
+                    zip_path = zip_path[(len("src")+1):]
                 if zip_path.startswith(pip_dir):
                     zip_path = zip_path[(len(pip_dir)+1):]
 
