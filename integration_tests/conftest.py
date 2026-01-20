@@ -157,6 +157,48 @@ def cloudformation_stack_name(request):
         raise RuntimeError(f"Stack {stack_name} is in state I can't fix: {stack_status}")
 
 
+def create_stack(cfn_params, stack_name, template):
+    cfn_client = boto3.client('cloudformation')
+
+    stack_id = cfn_client.create_stack(
+        StackName=stack_name,
+        TemplateBody=template.to_json(),
+        Parameters=dict_to_param_array(cfn_params),
+    )
+    stack_id = stack_id['StackId']
+    stack_state = wait_until_stack_stable(stack_id)
+
+    assert CloudFormationStates.CREATE_COMPLETE == stack_state
+
+    stack_info = cfn_client.describe_stacks(
+        StackName=stack_id,
+    )
+    outputs = {
+        _['OutputKey']: _['OutputValue']
+        for _ in stack_info['Stacks'][0]['Outputs']
+    }
+
+    return outputs, stack_id
+
+
+def update_stack(cfn_params, stack_id, expected_state=CloudFormationStates.UPDATE_COMPLETE):
+    cfn_client = boto3.client('cloudformation')
+    cfn_client.update_stack(
+        StackName=stack_id,
+        UsePreviousTemplate=True,
+        Parameters=dict_to_param_array(cfn_params),
+    )
+    assert expected_state == wait_until_stack_stable(stack_id)
+
+
+def delete_stack(stack_id):
+    cfn_client = boto3.client('cloudformation')
+    cfn_client.delete_stack(
+        StackName=stack_id,
+    )
+    assert CloudFormationStates.DELETE_COMPLETE == wait_until_stack_stable(stack_id)
+
+
 def dict_to_param_array(d):
     a = []
     for k, v in d.items():
