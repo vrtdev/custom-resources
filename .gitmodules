@@ -1,4 +1,6 @@
-[submodule "lambda_code/mysql/MySQLUser"]
-	path = lambda_code/mysql/MySQLUser
+[submodule "src/lambda_code/mysql/MySQLUser"]
+	path = src/lambda_code/mysql/MySQLUser
 	url = https://github.com/vrtdev/cfn-mysql-user-provider.git
 	branch = release/patch3
+
+# TODO still in use?

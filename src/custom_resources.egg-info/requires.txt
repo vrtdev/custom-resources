@@ -1,0 +1,16 @@
+troposphere
+
+[dev]
+pytest
+cfn-custom-resource@ git+https://github.com/vrtdev/cfn-custom-resource
+boto3
+botostubs
+twine
+invoke
+flake8
+flake8-docstrings
+flake8-tidy-imports
+flake8-commas
+flake8-string-format
+flake8-pep3101
+flake8-builtins

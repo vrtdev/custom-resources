@@ -1,4 +1,0 @@
-[distutils]
-index-servers = nexus
-[nexus]
-repository: https://nexus.core.a51.be/repository/vrt-pypi/

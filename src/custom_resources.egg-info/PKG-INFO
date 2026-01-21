@@ -1,3 +1,31 @@
+Metadata-Version: 2.4
+Name: custom_resources
+Version: 2.0.0
+Summary: Custom resources for Troposphere/CloudFormation.
+Author-email: VRT DPC <dpc@vrt.be>
+Keywords: cloudformation,aws
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+Requires-Dist: troposphere
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: cfn-custom-resource@ git+https://github.com/vrtdev/cfn-custom-resource ; extra == "dev"
+Requires-Dist: boto3; extra == "dev"
+Requires-Dist: botostubs; extra == "dev"
+Requires-Dist: twine; extra == "dev"
+Requires-Dist: invoke; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: flake8-docstrings; extra == "dev"
+Requires-Dist: flake8-tidy-imports; extra == "dev"
+Requires-Dist: flake8-commas; extra == "dev"
+Requires-Dist: flake8-string-format; extra == "dev"
+Requires-Dist: flake8-pep3101; extra == "dev"
+Requires-Dist: flake8-builtins; extra == "dev"
+Dynamic: license-file
+
 Custom resources
 ================
 
@@ -74,7 +102,5 @@ Upload to Nexus
 Uploading the custom-resources package to Nexus is simple, if you have the permissions to do so in Nexus. You first need to build the package, then you can either upload it through the Nexus web UI, or use twine to do so:
 ```
 uv sync --extra dev
-uv build
-uv publish
 twine upload --config-file pypirc -r nexus dist/*
 ```

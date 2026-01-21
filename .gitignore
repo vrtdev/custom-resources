@@ -2,7 +2,9 @@
 /*.iml
 /*.egg-info
 /dist
-/venv*
+/build
+/venv
+/.venv
 /output
 __pycache__
 *.pyc
