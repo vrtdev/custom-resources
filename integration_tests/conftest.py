@@ -54,7 +54,7 @@ def wait_until_stack_in_state(
     the DELETE_COMPLETE
     :return: the actual state the resources is in after waiting
     """
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
     active_stacks = cfn_client.describe_stacks(
         StackName=stack_name_or_id,
     )
@@ -103,7 +103,7 @@ def cloudformation_stack_name(request):
     yield stack_name
 
     # Make sure the stack is deleted
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
     try:
         active_stacks = cfn_client.describe_stacks(
             StackName=stack_name,
@@ -155,6 +155,48 @@ def cloudformation_stack_name(request):
         })
     else:
         raise RuntimeError(f"Stack {stack_name} is in state I can't fix: {stack_status}")
+
+
+def create_stack(cfn_params, stack_name, template):
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
+
+    stack_id = cfn_client.create_stack(
+        StackName=stack_name,
+        TemplateBody=template.to_json(),
+        Parameters=dict_to_param_array(cfn_params),
+    )
+    stack_id = stack_id['StackId']
+    stack_state = wait_until_stack_stable(stack_id)
+
+    assert CloudFormationStates.CREATE_COMPLETE == stack_state
+
+    stack_info = cfn_client.describe_stacks(
+        StackName=stack_id,
+    )
+    outputs = {
+        _['OutputKey']: _['OutputValue']
+        for _ in stack_info['Stacks'][0]['Outputs']
+    }
+
+    return outputs, stack_id
+
+
+def update_stack(cfn_params, stack_id, expected_state=CloudFormationStates.UPDATE_COMPLETE):
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
+    cfn_client.update_stack(
+        StackName=stack_id,
+        UsePreviousTemplate=True,
+        Parameters=dict_to_param_array(cfn_params),
+    )
+    assert expected_state == wait_until_stack_stable(stack_id)
+
+
+def delete_stack(stack_id):
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
+    cfn_client.delete_stack(
+        StackName=stack_id,
+    )
+    assert CloudFormationStates.DELETE_COMPLETE == wait_until_stack_stable(stack_id)
 
 
 def dict_to_param_array(d):
