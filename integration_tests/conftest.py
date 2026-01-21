@@ -54,7 +54,7 @@ def wait_until_stack_in_state(
     the DELETE_COMPLETE
     :return: the actual state the resources is in after waiting
     """
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
     active_stacks = cfn_client.describe_stacks(
         StackName=stack_name_or_id,
     )
@@ -103,7 +103,7 @@ def cloudformation_stack_name(request):
     yield stack_name
 
     # Make sure the stack is deleted
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
     try:
         active_stacks = cfn_client.describe_stacks(
             StackName=stack_name,
@@ -158,7 +158,7 @@ def cloudformation_stack_name(request):
 
 
 def create_stack(cfn_params, stack_name, template):
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
 
     stack_id = cfn_client.create_stack(
         StackName=stack_name,
@@ -182,7 +182,7 @@ def create_stack(cfn_params, stack_name, template):
 
 
 def update_stack(cfn_params, stack_id, expected_state=CloudFormationStates.UPDATE_COMPLETE):
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
     cfn_client.update_stack(
         StackName=stack_id,
         UsePreviousTemplate=True,
@@ -192,7 +192,7 @@ def update_stack(cfn_params, stack_id, expected_state=CloudFormationStates.UPDAT
 
 
 def delete_stack(stack_id):
-    cfn_client = boto3.client('cloudformation')
+    cfn_client = boto3.client('cloudformation', region_name='eu-west-1')
     cfn_client.delete_stack(
         StackName=stack_id,
     )
