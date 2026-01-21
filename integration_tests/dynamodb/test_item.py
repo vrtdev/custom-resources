@@ -112,7 +112,7 @@ def test_item(cloudformation_stack_name, template):
     table2_name = outputs['Table2Name']
     key = {"key": {"S": "foo"}}
 
-    ddb_client = boto3.client('dynamodb')
+    ddb_client = boto3.client('dynamodb', region_name='eu-west-1')
 
     def get_item(table_name):
         return ddb_client.get_item(
