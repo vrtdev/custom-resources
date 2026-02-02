@@ -14,11 +14,16 @@ classifiers = [
 ]
 keywords = ["cloudformation", "aws"]
 dependencies = [
-    "troposphere",
-    "pytest",
     "cfn-custom-resource @ git+https://github.com/vrtdev/cfn-custom-resource",
-    "boto3",
+]
+requires-python = ">=3.10"
+
+[dependency-groups]
+dev = [
+    "boto3",  # boto3 is included in AWS Lambda and should thus not be installed as a dependency in prod
     "twine",
+    "pytest",
+    "troposphere",
     "invoke",
     "flake8",
     "flake8-docstrings",
@@ -27,11 +32,6 @@ dependencies = [
     "flake8-string-format",
     "flake8-pep3101",
     "flake8-builtins",
-]
-requires-python = ">=3.10"
-
-[project.optional-dependencies]
-dev = [
     "botostubs",
 ]
 
