@@ -49,7 +49,6 @@ def clean(ctx, verbose=False, compiled=False):
 
 
 @task(
-    aliases=["flake8", "pep8"],
     help={
         'filename': 'File(s) to lint. Supports globbing.',
         'noglob': 'Disable globbing of filenames. Can give issues in virtual environments',
@@ -57,7 +56,7 @@ def clean(ctx, verbose=False, compiled=False):
 )
 def lint(ctx, filename=None, noglob=False):
     """Run flake8 python linter."""
-    command = 'flake8 --jobs=1'
+    command = ['ruff', 'check']
 
     if filename is not None:
         if noglob:
@@ -68,8 +67,9 @@ def lint(ctx, filename=None, noglob=False):
                 print("File `{0}` not found".format(filename))
                 exit(1)
 
-        command += ' ' + " ".join(templates)
+        command += templates
 
+    command = ' '.join(command)
     print("Running command: '" + command + "'")
     ctx.run(command)
 

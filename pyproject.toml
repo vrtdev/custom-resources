@@ -20,19 +20,13 @@ requires-python = ">=3.10"
 
 [dependency-groups]
 dev = [
-    "boto3",  # boto3 is included in AWS Lambda and should thus not be installed as a dependency in prod
-    "twine",
-    "pytest",
-    "troposphere",
-    "invoke",
-    "flake8",
-    "flake8-docstrings",
-    "flake8-tidy-imports",
-    "flake8-commas",
-    "flake8-string-format",
-    "flake8-pep3101",
-    "flake8-builtins",
-    "botostubs",
+    "boto3>=1.42.4",  # boto3 is included in AWS Lambda and should thus not be installed as a dependency in prod
+    "botostubs>=0.15.1.23.10",
+    "invoke>=3.0.3",
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
+    "troposphere>=4.10.1",
+    "twine>=6.2.0",
 ]
 
 [tool.pytest.ini_options]
@@ -50,3 +44,25 @@ custom_resources = { index = "nexus" }
 name = "nexus"
 url = "https://nexus.core.a51.be/repository/pypi"
 explicit = true
+
+[tool.ruff]
+respect-gitignore = false
+line-length = 140
+indent-width = 4
+extend-exclude = [
+    "build",
+    "dist",
+    "docs",
+]
+
+[tool.ruff.lint]
+extend-select = [
+    "E",
+    "W",
+    "A",
+    "COM",
+    "TID",
+    "B",
+    "SIM",
+    "UP",
+]
