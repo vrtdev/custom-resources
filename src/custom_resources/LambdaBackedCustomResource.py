@@ -4,7 +4,7 @@ import warnings
 from troposphere import iam, Sub, ImportValue
 from troposphere.cloudformation import CustomResource
 
-from . import _get_custom_resources_stack_name
+from custom_resources import _get_custom_resources_stack_name
 
 
 class LambdaBackedCustomResource(CustomResource):
